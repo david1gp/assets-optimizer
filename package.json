@@ -22,7 +22,7 @@
     }
   },
   "description": "Process and sync web project images between local folders and R2",
-  "homepage": "https://github.com/david1gp/optimize-images-web#readme",
+  "homepage": "https://github.com/david1gp/optimize-images-web",
   "keywords": [
     "images",
     "image-optimization",

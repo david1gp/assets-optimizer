@@ -1,7 +1,8 @@
-import { imageSize } from "image-size"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { imageSize } from "image-size"
 import { getOwnPackageName } from "../shared/getOwnPackageName.js"
+import type { Logger } from "../shared/logger.js"
 import { walkFiles } from "../shared/walkFiles.js"
 import type { ImageType } from "./AssetListTypes.js"
 import { formatGeneratedCodeFile } from "./formatGeneratedCodeFile.js"
@@ -15,21 +16,24 @@ export async function generateImageList(
   imageDirectory: string,
   outputPath: string,
   imageTypeImportPath?: string,
+  logger?: Logger,
 ): Promise<void> {
   const resolvedImageTypeImportPath = imageTypeImportPath ?? (await getOwnPackageName(import.meta.url))
   const existingImages = await loadExistingAssetList<ImageType>(outputPath, "imageList")
-  const imageMap = await processImageFiles(imageDirectory, existingImages)
+  const imageMap = await processImageFiles(imageDirectory, existingImages, logger)
   const sorted = sortAssetMap(imageMap)
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
   await Bun.write(outputPath, createGeneratedImageListContent(sorted, resolvedImageTypeImportPath))
-  await formatGeneratedCodeFile(outputPath)
-  console.log(`Generated ${Object.keys(sorted).length} images to ${outputPath}`)
+  await formatGeneratedCodeFile(outputPath, logger)
+  logger?.files(`generated image list: ${outputPath}`)
+  logger?.summary(`Generated ${Object.keys(sorted).length} images to ${outputPath}`)
 }
 
 async function processImageFiles(
   directory: string,
   existingImages: Record<string, ImageType>,
+  logger?: Logger,
 ): Promise<Record<string, ImageType>> {
   const imageMap: Record<string, ImageType> = {}
 
@@ -58,7 +62,7 @@ async function processImageFiles(
         mimeType: getImageMimeType(extension),
       }
     } catch (error) {
-      console.error(`Error processing ${filePath}:`, error)
+      logger?.error(`Error processing ${filePath}: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
   return imageMap

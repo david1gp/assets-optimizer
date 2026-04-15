@@ -12,26 +12,29 @@ export async function processVideos(options: ProcessVideosOptions): Promise<void
   const {
     cacheControlHeader,
     cwd,
-    processedVideosDir,
+    logger,
+    videoOptimizedDir,
     remoteVideoOriginals,
     remoteVideoProcessed,
     result,
     videoPreviewQuality,
-    videosDir,
+    videoOriginalsDir,
   } = options
 
-  await syncVideoOriginals(videosDir, remoteVideoOriginals, cwd)
+  await syncVideoOriginals(videoOriginalsDir, remoteVideoOriginals, cwd, logger)
 
-  const hasRemoteProcessedVideosDir = await remotePathExists(remoteVideoProcessed, cwd)
-  if (hasRemoteProcessedVideosDir) {
-    await fs.mkdir(processedVideosDir, { recursive: true })
-    await runRclone(["copy", "--ignore-existing", remoteVideoProcessed, processedVideosDir], cwd)
+  const hasRemoteProcessedVideosDir = remoteVideoProcessed
+    ? await remotePathExists(remoteVideoProcessed, cwd, logger)
+    : false
+  if (remoteVideoProcessed && hasRemoteProcessedVideosDir) {
+    await fs.mkdir(videoOptimizedDir, { recursive: true })
+    await runRclone(["copy", "--ignore-existing", remoteVideoProcessed, videoOptimizedDir], cwd, logger)
   }
 
-  if (await dirExists(videosDir)) {
-    await processLocalVideos(videosDir, processedVideosDir, cwd, result)
+  if (await dirExists(videoOriginalsDir)) {
+    await processLocalVideos(videoOriginalsDir, videoOptimizedDir, cwd, result, logger)
   }
 
-  await ensureVideoPreviews(processedVideosDir, videoPreviewQuality, cwd, result)
-  await uploadProcessedVideos(processedVideosDir, remoteVideoProcessed, cacheControlHeader, cwd, result)
+  await ensureVideoPreviews(videoOptimizedDir, videoPreviewQuality, cwd, result, logger)
+  await uploadProcessedVideos(videoOptimizedDir, remoteVideoProcessed, cacheControlHeader, cwd, result, logger)
 }

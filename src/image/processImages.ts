@@ -13,6 +13,7 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
     cwd,
     imageOptimizedDir,
     imageOriginalsDir,
+    logger,
     remoteImageOptimized,
     remoteImageOriginals,
     result,
@@ -21,10 +22,12 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
   await fs.mkdir(imageOriginalsDir, { recursive: true })
   await fs.mkdir(imageOptimizedDir, { recursive: true })
 
-  await runRclone(["mkdir", remoteImageOriginals], cwd)
-  await runRclone(["mkdir", remoteImageOptimized], cwd)
-  await runRclone(["copy", remoteImageOriginals, imageOriginalsDir], cwd)
-  await runRclone(["copy", imageOriginalsDir, remoteImageOriginals], cwd)
+  if (remoteImageOriginals && remoteImageOptimized) {
+    await runRclone(["mkdir", remoteImageOriginals], cwd, logger)
+    await runRclone(["mkdir", remoteImageOptimized], cwd, logger)
+    await runRclone(["copy", remoteImageOriginals, imageOriginalsDir], cwd, logger)
+    await runRclone(["copy", imageOriginalsDir, remoteImageOriginals], cwd, logger)
+  }
 
   const expectedImages = await buildExpectedImages(imageOriginalsDir, imageOptimizedDir, result, allowRootImageFiles)
   const expectedFileNames = new Set(expectedImages.map((image) => image.fileName))
@@ -38,27 +41,30 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
     }
   }
 
-  const remoteOptimizedFiles = new Set(await listRemoteFiles(remoteImageOptimized, cwd))
-  for (const image of expectedImages) {
-    if (!remoteOptimizedFiles.has(image.fileName)) {
-      await runRclone(
-        [
-          "copyto",
-          "--header-upload",
-          `Cache-Control: ${cacheControlHeader}`,
-          image.localPath,
-          `${remoteImageOptimized}/${image.fileName}`,
-        ],
-        cwd,
-      )
-      result.uploadedRemote.push(image.fileName)
+  if (remoteImageOptimized) {
+    const remoteOptimizedFiles = new Set(await listRemoteFiles(remoteImageOptimized, cwd, logger))
+    for (const image of expectedImages) {
+      if (!remoteOptimizedFiles.has(image.fileName)) {
+        await runRclone(
+          [
+            "copyto",
+            "--header-upload",
+            `Cache-Control: ${cacheControlHeader}`,
+            image.localPath,
+            `${remoteImageOptimized}/${image.fileName}`,
+          ],
+          cwd,
+          logger,
+        )
+        result.uploadedRemote.push(image.fileName)
+      }
     }
-  }
 
-  for (const remoteFile of remoteOptimizedFiles) {
-    if (!expectedFileNames.has(remoteFile)) {
-      await runRclone(["deletefile", `${remoteImageOptimized}/${remoteFile}`], cwd)
-      result.deletedRemote.push(remoteFile)
+    for (const remoteFile of remoteOptimizedFiles) {
+      if (!expectedFileNames.has(remoteFile)) {
+        await runRclone(["deletefile", `${remoteImageOptimized}/${remoteFile}`], cwd, logger)
+        result.deletedRemote.push(remoteFile)
+      }
     }
   }
 }

@@ -1,8 +1,9 @@
-import { imageSize } from "image-size"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { imageSize } from "image-size"
 import { getOwnPackageName } from "../shared/getOwnPackageName.js"
 import { isMissingDirError } from "../shared/isMissingDirError.js"
+import type { Logger } from "../shared/logger.js"
 import { walkFiles } from "../shared/walkFiles.js"
 import { createVideoPreviewPath } from "../video/createVideoPreviewPath.js"
 import { supportedVideoSourceExtensions } from "../video/supportedVideoSourceExtensions.js"
@@ -16,6 +17,7 @@ export async function generateVideoList(
   videosDirectory: string,
   outputPath: string,
   videoTypeImportPath?: string,
+  logger?: Logger,
 ): Promise<void> {
   const resolvedVideoTypeImportPath = videoTypeImportPath ?? (await getOwnPackageName(import.meta.url))
   const existingVideos = await loadExistingAssetList<VideoType>(outputPath, "videoList")
@@ -23,8 +25,9 @@ export async function generateVideoList(
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
   await Bun.write(outputPath, createGeneratedVideoListContent(videoMap, resolvedVideoTypeImportPath))
-  await formatGeneratedCodeFile(outputPath)
-  console.log(`Generated ${Object.keys(videoMap).length} videos to ${outputPath}`)
+  await formatGeneratedCodeFile(outputPath, logger)
+  logger?.files(`generated video list: ${outputPath}`)
+  logger?.summary(`Generated ${Object.keys(videoMap).length} videos to ${outputPath}`)
 }
 
 async function processVideoFiles(

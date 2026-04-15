@@ -1,12 +1,14 @@
-import type { OptimizeImagesWebResult } from "../AssetsOptimizeResult.js"
+import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
+import type { Logger } from "../shared/logger.js"
 
 export interface ProcessVideosOptions {
   cwd: string
-  videosDir: string
-  processedVideosDir: string
-  remoteVideoOriginals: string
-  remoteVideoProcessed: string
+  videoOriginalsDir: string
+  videoOptimizedDir: string
+  remoteVideoOriginals?: string
+  remoteVideoProcessed?: string
   cacheControlHeader: string
   videoPreviewQuality: number
-  result: OptimizeImagesWebResult
+  result: AssetsOptimizeResult
+  logger: Logger
 }

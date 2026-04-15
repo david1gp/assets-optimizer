@@ -1,6 +1,6 @@
 # @adaptive-ds/assets-optimizer
 
-Process, hash, sync, and clean image assets for web projects that keep originals outside git and sync through any `rclone` remote, with a separate pass for web videos.
+Process, hash, sync, and clean image assets for web projects that keep originals outside git and optionally sync through any `rclone` remote, with a separate pass for web videos.
 
 This package is built for a workflow with two local directories:
 
@@ -11,7 +11,7 @@ This package is built for a workflow with two local directories:
 
 It is designed for projects where:
 
-- originals live on an `rclone` remote and are synced locally
+- originals may live on an `rclone` remote and be synced locally
 - optimized outputs should be deterministic and aggressively cacheable
 - output filenames should change when either the source file or the transform changes
 - old optimized files should be removed locally and remotely
@@ -28,20 +28,20 @@ It is designed for projects where:
 `assetsOptimize()` performs the full asset pipeline:
 
 1. Resolves the project name from `package.json.name`
-2. Uses that as the base path on your configured `rclone` remote
-3. Syncs originals between the remote and `images`
+2. If `rcloneRemote` is configured, uses that project name as the base path on the remote
+3. If `rcloneRemote` is configured, syncs originals between the remote and `images`
 4. Scans transform folders like `1920x1080_jpg`
 5. Processes matching image source files with `sharp`
 6. Writes flat optimized images into `public/images`
 7. Names image files as `<basename>_<hash>.<ext>`
 8. Skips already-generated images
 9. Deletes stale optimized images locally
-10. Uploads missing optimized images to the remote with cache headers
-11. Deletes stale optimized images from the remote
+10. If `rcloneRemote` is configured, uploads missing optimized images to the remote with cache headers
+11. If `rcloneRemote` is configured, deletes stale optimized images from the remote
 12. Runs a separate optional video pass from `videos` to `public/videos`
 13. Generates a `.jpg` preview beside each processed video using the processed video dimensions
 14. Keeps video filenames unchanged and skips any processed video or preview that already exists
-15. Uploads missing processed videos and previews to the remote without deleting manual variants
+15. If `rcloneRemote` is configured, uploads missing processed videos and previews to the remote without deleting manual variants
 16. Generates `src/app/assets/imageList.ts` and `src/app/assets/videoList.ts` by default
 17. Prints a clear summary of what changed
 
@@ -95,8 +95,8 @@ public/videos/
 Video behavior:
 
 - if both local `videos` and remote `video-originals` are missing, the video pass does nothing
-- source videos sync through `video-originals`
-- processed videos sync through `video-processed`
+- if `rcloneRemote` is configured, source videos sync through `video-originals`
+- if `rcloneRemote` is configured, processed videos sync through `video-processed`
 - missing processed videos are created with `ffmpeg`
 - missing preview images are created as `.jpg` files beside processed videos
 - existing processed videos are skipped and preserved as manual transformations
@@ -150,21 +150,21 @@ If you call `assetsOptimize()` with no arguments, it uses:
 - `imageOptimizedDir`: `./public/images`
 - `allowRootImageFiles`: `false`
 - `processVideos`: `true`
-- `videosDir`: `./videos`
-- `processedVideosDir`: `./public/videos`
+- `videoOriginalsDir`: `./videos`
+- `videoOptimizedDir`: `./public/videos`
 - `imageListOutputPath`: `./src/app/assets/imageList.ts`
 - `videoListOutputPath`: `./src/app/assets/videoList.ts`
 - `generateImageList`: `true`
 - `generateVideoList`: `true`
 - `videoPreviewQuality`: `80`
-- `rcloneRemote`: `leo`
+- `rcloneRemote`: not set
 - `remoteImageOriginalsDir`: `image-originals`
 - `remoteImageOptimizedDir`: `image-processed`
 - `remoteVideoOriginalsDir`: `video-originals`
 - `remoteVideoProcessedDir`: `video-processed`
 - `cacheControlHeader`: `public,max-age=31536000,immutable`
 
-So for a project named `moramontage`, the remote paths become:
+If you set `rcloneRemote` to `leo` for a project named `moramontage`, the remote paths become:
 
 - `leo:moramontage/image-originals`
 - `leo:moramontage/image-processed`
@@ -189,6 +189,8 @@ await assetsOptimize()
 
 This generates optimized images, processed videos, video preview JPGs, `imageList.ts`, and `videoList.ts` in one run. Existing image alt text and existing video preview alt text are preserved when the generated files already exist.
 
+When `rcloneRemote` is omitted, all remote sync, upload, and cleanup steps are skipped.
+
 ## API
 
 ```ts
@@ -203,6 +205,7 @@ const result = await assetsOptimize(options)
 interface OptimizeImagesWebOptions {
   cwd?: string
   projectName?: string
+  logLevel?: 0 | 1 | 2 | 3
   processImages?: boolean
   imageOriginalsDir?: string
   imageOptimizedDir?: string
@@ -211,8 +214,8 @@ interface OptimizeImagesWebOptions {
   imageListImportPath?: string
   generateImageList?: boolean
   processVideos?: boolean
-  videosDir?: string
-  processedVideosDir?: string
+  videoOriginalsDir?: string
+  videoOptimizedDir?: string
   videoListOutputPath?: string
   videoListImportPath?: string
   generateVideoList?: boolean
@@ -225,6 +228,13 @@ interface OptimizeImagesWebOptions {
   cacheControlHeader?: string
 }
 ```
+
+`logLevel` controls runtime logging:
+
+- `0`: no logs
+- `1`: summary plus explicit worked-on files
+- `2`: level 1 plus all CLI calls
+- `3`: level 2 plus command output
 
 ### `OptimizeImagesWebResult`
 
@@ -252,12 +262,15 @@ interface OptimizeImagesWebResult {
 import { assetsOptimize } from "@adaptive-ds/assets-optimizer"
 
 await assetsOptimize({
+  logLevel: 1,
   processImages: true,
   imageOriginalsDir: "./assets/originals",
   imageOptimizedDir: "./assets/optimized",
   allowRootImageFiles: false,
   imageListOutputPath: "./src/app/assets/imageList.ts",
   processVideos: true,
+  videoOriginalsDir: "./videos",
+  videoOptimizedDir: "./public/videos",
   videoListOutputPath: "./src/app/assets/videoList.ts",
   videoPreviewQuality: 80,
   rcloneRemote: "leo",

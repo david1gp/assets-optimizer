@@ -1,11 +1,15 @@
 import * as Bun from "bun"
+import type { Logger } from "../shared/logger.js"
 
 let availableEncodersPromise: Promise<Set<string>> | undefined
 
-export async function getAvailableVideoEncoders(cwd: string): Promise<Set<string>> {
+export async function getAvailableVideoEncoders(cwd: string, logger?: Logger): Promise<Set<string>> {
   if (!availableEncodersPromise) {
     availableEncodersPromise = (async () => {
-      const process = Bun.spawn(["ffmpeg", "-hide_banner", "-encoders"], {
+      const command = ["ffmpeg", "-hide_banner", "-encoders"]
+      logger?.cli(command.join(" "))
+
+      const process = Bun.spawn(command, {
         cwd,
         stdout: "pipe",
         stderr: "pipe",
@@ -18,6 +22,15 @@ export async function getAvailableVideoEncoders(cwd: string): Promise<Set<string
 
       if (exitCode !== 0) {
         throw new Error(`ffmpeg -encoders failed with exit code ${exitCode}\n${stderr || stdout}`.trim())
+      }
+
+      if (logger?.isEnabled(3)) {
+        if (stdout.trim()) {
+          logger.verbose(stdout.trim())
+        }
+        if (stderr.trim()) {
+          logger.verbose(stderr.trim())
+        }
       }
 
       return new Set(

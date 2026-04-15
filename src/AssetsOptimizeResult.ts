@@ -1,4 +1,4 @@
-export interface OptimizeImagesWebResult {
+export interface AssetsOptimizeResult {
   processed: string[]
   skippedExisting: string[]
   skippedRootFiles: string[]

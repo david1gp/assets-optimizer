@@ -1,6 +1,7 @@
-export interface OptimizeImagesWebOptions {
+export interface AssetsOptimizeOptions {
   cwd?: string
   projectName?: string
+  logLevel?: 0 | 1 | 2 | 3
   processImages?: boolean
   imageOriginalsDir?: string
   imageOptimizedDir?: string
@@ -9,8 +10,8 @@ export interface OptimizeImagesWebOptions {
   imageListImportPath?: string
   generateImageList?: boolean
   processVideos?: boolean
-  videosDir?: string
-  processedVideosDir?: string
+  videoOriginalsDir?: string
+  videoOptimizedDir?: string
   videoListOutputPath?: string
   videoListImportPath?: string
   generateVideoList?: boolean

@@ -1,25 +1,31 @@
 import fs from "node:fs/promises"
 import { dirExists } from "../shared/dirExists.js"
+import type { Logger } from "../shared/logger.js"
 import { remotePathExists } from "../shared/remotePathExists.js"
 import { runRclone } from "../shared/runRclone.js"
 
-export async function syncVideoOriginals(videosDir: string, remoteVideoOriginals: string, cwd: string): Promise<void> {
-  const hasLocalVideosDir = await dirExists(videosDir)
-  const hasRemoteVideosDir = await remotePathExists(remoteVideoOriginals, cwd)
+export async function syncVideoOriginals(
+  videoOriginalsDir: string,
+  remoteVideoOriginals: string | undefined,
+  cwd: string,
+  logger: Logger,
+): Promise<void> {
+  const hasLocalVideosDir = await dirExists(videoOriginalsDir)
+  const hasRemoteVideosDir = remoteVideoOriginals ? await remotePathExists(remoteVideoOriginals, cwd, logger) : false
 
   if (!hasLocalVideosDir && !hasRemoteVideosDir) {
     return
   }
 
-  if (hasRemoteVideosDir) {
-    await fs.mkdir(videosDir, { recursive: true })
-    await runRclone(["copy", remoteVideoOriginals, videosDir], cwd)
+  if (remoteVideoOriginals && hasRemoteVideosDir) {
+    await fs.mkdir(videoOriginalsDir, { recursive: true })
+    await runRclone(["copy", remoteVideoOriginals, videoOriginalsDir], cwd, logger)
   }
 
-  if (await dirExists(videosDir)) {
+  if (remoteVideoOriginals && (await dirExists(videoOriginalsDir))) {
     if (!hasRemoteVideosDir) {
-      await runRclone(["mkdir", remoteVideoOriginals], cwd)
+      await runRclone(["mkdir", remoteVideoOriginals], cwd, logger)
     }
-    await runRclone(["copy", videosDir, remoteVideoOriginals], cwd)
+    await runRclone(["copy", videoOriginalsDir, remoteVideoOriginals], cwd, logger)
   }
 }

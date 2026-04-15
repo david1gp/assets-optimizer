@@ -1,3 +1,4 @@
+import type { Logger } from "../shared/logger.js"
 import { getAvailableVideoEncoders } from "./getAvailableVideoEncoders.js"
 
 export async function createVideoArgs(
@@ -5,6 +6,7 @@ export async function createVideoArgs(
   outputPath: string,
   extension: string,
   cwd: string,
+  logger?: Logger,
 ): Promise<string[]> {
   const commonArgs = ["-y", "-i", sourcePath, "-map", "0:v:0", "-map", "0:a?", "-map_metadata", "-1"]
 
@@ -27,7 +29,7 @@ export async function createVideoArgs(
     ]
   }
 
-  const availableEncoders = await getAvailableVideoEncoders(cwd)
+  const availableEncoders = await getAvailableVideoEncoders(cwd, logger)
   if (availableEncoders.has("libx264")) {
     return [
       ...commonArgs,

@@ -1,6 +1,6 @@
 import fs from "node:fs/promises"
 import path from "node:path"
-import type { OptimizeImagesWebResult } from "../AssetsOptimizeResult.js"
+import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
 import { walkFiles } from "../shared/walkFiles.js"
 import { createOutputHash } from "./createOutputHash.js"
 import { createRootImageTransform } from "./createRootImageTransform.js"
@@ -12,7 +12,7 @@ import { supportedSourceExtensions } from "./supportedSourceExtensions.js"
 export async function buildExpectedImages(
   originalsDir: string,
   optimizedDir: string,
-  result: OptimizeImagesWebResult,
+  result: AssetsOptimizeResult,
   allowRootImageFiles = false,
 ): Promise<ExpectedImage[]> {
   const dirEntries = await fs.readdir(originalsDir, { withFileTypes: true })

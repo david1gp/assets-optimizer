@@ -1,7 +1,7 @@
 import sharp from "sharp"
-import { assertNever } from "./assertNever.js"
+import { assertNever } from "../shared/assertNever.js"
 import { defaultQuality } from "./defaultQuality.js"
-import { type TransformSpec } from "./TransformSpec.js"
+import type { TransformSpec } from "./TransformSpec.js"
 
 export async function processImage(
   sourceBuffer: Buffer,

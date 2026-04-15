@@ -1,10 +1,14 @@
 export interface OptimizeImagesWebOptions {
   cwd?: string
   projectName?: string
-  originalsDir?: string
-  optimizedDir?: string
+  imageOriginalsDir?: string
+  imageOptimizedDir?: string
+  videosDir?: string
+  processedVideosDir?: string
   rcloneRemote?: string
-  remoteOriginalsDir?: string
-  remoteOptimizedDir?: string
+  remoteImageOriginalsDir?: string
+  remoteImageOptimizedDir?: string
+  remoteVideoOriginalsDir?: string
+  remoteVideoProcessedDir?: string
   cacheControlHeader?: string
 }

@@ -1,4 +1,4 @@
-import type { OptimizeImagesWebResult } from "./OptimizeImagesWebResult.js"
+import type { OptimizeImagesWebResult } from "../OptimizeImagesWebResult.js"
 
 export function printSummary(result: OptimizeImagesWebResult): void {
   console.log(`Processed ${result.processed.length} new optimized images`)
@@ -13,4 +13,7 @@ export function printSummary(result: OptimizeImagesWebResult): void {
   console.log(`Deleted ${result.deletedLocal.length} stale local optimized images`)
   console.log(`Uploaded ${result.uploadedRemote.length} optimized images to R2`)
   console.log(`Deleted ${result.deletedRemote.length} stale remote optimized images`)
+  console.log(`Processed ${result.processedVideos.length} new optimized videos`)
+  console.log(`Skipped ${result.skippedExistingVideos.length} existing processed videos`)
+  console.log(`Uploaded ${result.uploadedRemoteVideos.length} processed videos to R2`)
 }

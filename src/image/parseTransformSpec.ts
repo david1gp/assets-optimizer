@@ -1,4 +1,4 @@
-import type { ImageFormat } from "./ImageFormat.js"
+import { isImageFormat } from "./isImageFormat.js"
 import type { TransformSpec } from "./TransformSpec.js"
 
 export function parseTransformSpec(dirName: string): TransformSpec | null {
@@ -14,7 +14,10 @@ export function parseTransformSpec(dirName: string): TransformSpec | null {
 
   const width = Number.parseInt(widthValue, 10)
   const height = Number.parseInt(heightValue, 10)
-  const format = formatValue as ImageFormat
+  if (!isImageFormat(formatValue)) {
+    return null
+  }
+  const format = formatValue
 
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     return null

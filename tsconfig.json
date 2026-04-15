@@ -68,7 +68,9 @@
     "node_modules",
     "ops",
     "public",
-    "public-image-versions",
-    "public-images"
+    "images",
+    "public/images",
+    "videos",
+    "public/videos"
   ],
 }

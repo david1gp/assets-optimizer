@@ -21,12 +21,15 @@
       "import": "./dist/*.js"
     }
   },
-  "description": "Process and sync web project images between local folders and R2",
+  "description": "Process and sync web project images and videos between local folders and R2",
   "homepage": "https://github.com/david1gp/optimize-images-web",
   "keywords": [
     "images",
     "image-optimization",
+    "video",
+    "video-optimization",
     "sharp",
+    "ffmpeg",
     "r2",
     "rclone",
     "web-assets"

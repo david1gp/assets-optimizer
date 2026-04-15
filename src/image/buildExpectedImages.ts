@@ -1,12 +1,12 @@
 import fs from "node:fs/promises"
 import path from "node:path"
+import type { OptimizeImagesWebResult } from "../OptimizeImagesWebResult.js"
+import { walkFiles } from "../shared/walkFiles.js"
 import { createOutputHash } from "./createOutputHash.js"
 import { type ExpectedImage } from "./ExpectedImage.js"
-import { type OptimizeImagesWebResult } from "./OptimizeImagesWebResult.js"
 import { parseTransformSpec } from "./parseTransformSpec.js"
 import { processImage } from "./processImage.js"
 import { supportedSourceExtensions } from "./supportedSourceExtensions.js"
-import { walkFiles } from "./walkFiles.js"
 
 export async function buildExpectedImages(
   originalsDir: string,
@@ -43,7 +43,6 @@ export async function buildExpectedImages(
         console.warn(`Skipped unsupported source file: ${path.relative(originalsDir, sourceFile)}`)
         continue
       }
-
       const sourceBuffer = await fs.readFile(sourceFile)
       const hash = createOutputHash(sourceBuffer, transform.normalized)
       const baseName = path.parse(sourceFile).name

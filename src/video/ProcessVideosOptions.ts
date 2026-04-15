@@ -1,4 +1,4 @@
-import type { OptimizeImagesWebResult } from "../OptimizeImagesWebResult.js"
+import type { OptimizeImagesWebResult } from "../AssetsOptimizeResult.js"
 
 export interface ProcessVideosOptions {
   cwd: string
@@ -7,5 +7,6 @@ export interface ProcessVideosOptions {
   remoteVideoOriginals: string
   remoteVideoProcessed: string
   cacheControlHeader: string
+  videoPreviewQuality: number
   result: OptimizeImagesWebResult
 }

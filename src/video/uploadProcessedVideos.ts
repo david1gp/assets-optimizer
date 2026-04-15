@@ -1,9 +1,10 @@
 import path from "node:path"
-import type { OptimizeImagesWebResult } from "../OptimizeImagesWebResult.js"
+import type { OptimizeImagesWebResult } from "../AssetsOptimizeResult.js"
 import { listLocalFiles } from "../shared/listLocalFiles.js"
 import { listRemoteFiles } from "../shared/listRemoteFiles.js"
 import { remotePathExists } from "../shared/remotePathExists.js"
 import { runRclone } from "../shared/runRclone.js"
+import { supportedVideoSourceExtensions } from "./supportedVideoSourceExtensions.js"
 
 export async function uploadProcessedVideos(
   processedVideosDir: string,
@@ -42,6 +43,12 @@ export async function uploadProcessedVideos(
       ],
       cwd,
     )
-    result.uploadedRemoteVideos.push(relativePath)
+
+    if (supportedVideoSourceExtensions.has(path.extname(localFile).toLowerCase())) {
+      result.uploadedRemoteVideos.push(relativePath)
+      continue
+    }
+
+    result.uploadedRemoteVideoPreviews.push(relativePath)
   }
 }

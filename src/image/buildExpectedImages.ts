@@ -1,8 +1,9 @@
 import fs from "node:fs/promises"
 import path from "node:path"
-import type { OptimizeImagesWebResult } from "../OptimizeImagesWebResult.js"
+import type { OptimizeImagesWebResult } from "../AssetsOptimizeResult.js"
 import { walkFiles } from "../shared/walkFiles.js"
 import { createOutputHash } from "./createOutputHash.js"
+import { createRootImageTransform } from "./createRootImageTransform.js"
 import { type ExpectedImage } from "./ExpectedImage.js"
 import { parseTransformSpec } from "./parseTransformSpec.js"
 import { processImage } from "./processImage.js"
@@ -12,6 +13,7 @@ export async function buildExpectedImages(
   originalsDir: string,
   optimizedDir: string,
   result: OptimizeImagesWebResult,
+  allowRootImageFiles = false,
 ): Promise<ExpectedImage[]> {
   const dirEntries = await fs.readdir(originalsDir, { withFileTypes: true })
   const expectedImages: ExpectedImage[] = []
@@ -19,9 +21,46 @@ export async function buildExpectedImages(
   for (const entry of dirEntries) {
     const entryPath = path.join(originalsDir, entry.name)
     if (entry.isFile()) {
-      result.skippedRootFiles.push(entry.name)
-      result.warnings.push(`Skipped root original file: ${entry.name}`)
-      console.warn(`Skipped root original file: ${entry.name}`)
+      if (!allowRootImageFiles) {
+        result.skippedRootFiles.push(entry.name)
+        result.warnings.push(`Skipped root original file: ${entry.name}`)
+        console.warn(`Skipped root original file: ${entry.name}`)
+        continue
+      }
+
+      const extension = path.extname(entry.name).toLowerCase()
+      if (!supportedSourceExtensions.has(extension)) {
+        result.warnings.push(`Skipped unsupported root source file: ${entry.name}`)
+        console.warn(`Skipped unsupported root source file: ${entry.name}`)
+        continue
+      }
+
+      const sourceBuffer = await fs.readFile(entryPath)
+      const transform = createRootImageTransform(entryPath, sourceBuffer)
+      if (!transform) {
+        result.warnings.push(`Skipped root source file with unsupported output format: ${entry.name}`)
+        console.warn(`Skipped root source file with unsupported output format: ${entry.name}`)
+        continue
+      }
+
+      const hash = createOutputHash(sourceBuffer, transform.normalized)
+      const baseName = path.parse(entryPath).name
+      const fileName = `${baseName}_${hash}.${transform.format}`
+      const outputPath = path.join(optimizedDir, fileName)
+
+      expectedImages.push({
+        fileName,
+        localPath: outputPath,
+      })
+
+      try {
+        await fs.access(outputPath)
+        result.skippedExisting.push(fileName)
+      } catch {
+        await processImage(sourceBuffer, outputPath, transform)
+        result.processed.push(fileName)
+      }
+
       continue
     }
 

@@ -8,6 +8,7 @@ import type { ProcessImagesOptions } from "./ProcessImagesOptions.js"
 
 export async function processImages(options: ProcessImagesOptions): Promise<void> {
   const {
+    allowRootImageFiles,
     cacheControlHeader,
     cwd,
     imageOptimizedDir,
@@ -25,7 +26,7 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
   await runRclone(["copy", remoteImageOriginals, imageOriginalsDir], cwd)
   await runRclone(["copy", imageOriginalsDir, remoteImageOriginals], cwd)
 
-  const expectedImages = await buildExpectedImages(imageOriginalsDir, imageOptimizedDir, result)
+  const expectedImages = await buildExpectedImages(imageOriginalsDir, imageOptimizedDir, result, allowRootImageFiles)
   const expectedFileNames = new Set(expectedImages.map((image) => image.fileName))
 
   const localOptimizedFiles = await listLocalFiles(imageOptimizedDir)

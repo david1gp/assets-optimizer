@@ -9,4 +9,7 @@ export interface OptimizeImagesWebResult {
   processedVideos: string[]
   skippedExistingVideos: string[]
   uploadedRemoteVideos: string[]
+  processedVideoPreviews: string[]
+  skippedExistingVideoPreviews: string[]
+  uploadedRemoteVideoPreviews: string[]
 }

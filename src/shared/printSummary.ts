@@ -1,4 +1,4 @@
-import type { OptimizeImagesWebResult } from "../OptimizeImagesWebResult.js"
+import type { OptimizeImagesWebResult } from "../AssetsOptimizeResult.js"
 
 export function printSummary(result: OptimizeImagesWebResult): void {
   console.log(`Processed ${result.processed.length} new optimized images`)
@@ -16,4 +16,7 @@ export function printSummary(result: OptimizeImagesWebResult): void {
   console.log(`Processed ${result.processedVideos.length} new optimized videos`)
   console.log(`Skipped ${result.skippedExistingVideos.length} existing processed videos`)
   console.log(`Uploaded ${result.uploadedRemoteVideos.length} processed videos to R2`)
+  console.log(`Generated ${result.processedVideoPreviews.length} new video previews`)
+  console.log(`Skipped ${result.skippedExistingVideoPreviews.length} existing video previews`)
+  console.log(`Uploaded ${result.uploadedRemoteVideoPreviews.length} video previews to R2`)
 }

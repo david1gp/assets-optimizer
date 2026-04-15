@@ -1,6 +1,6 @@
 import fs from "node:fs/promises"
 import path from "node:path"
-import type { OptimizeImagesWebResult } from "../OptimizeImagesWebResult.js"
+import type { OptimizeImagesWebResult } from "../AssetsOptimizeResult.js"
 import { walkFiles } from "../shared/walkFiles.js"
 import { createVideoArgs } from "./createVideoArgs.js"
 import { runFfmpeg } from "./runFfmpeg.js"

@@ -15,8 +15,8 @@ pids
 coverage/
 .nyc_output
 
-# Build outputs (if any)
-dist/
+# Build outputs
+# dist/ - DO NOT ignore dist, it's needed for the published package
 build/
 
 # Project-specific ignores

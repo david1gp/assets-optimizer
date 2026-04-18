@@ -24,7 +24,6 @@ export async function bisync(localPath: string, remotePath: string, options: Bis
     "--create-empty-src-dirs",
     "--resilient",
     "--recover",
-    "--ignore-listing",
   ]
   if (options.resync === true || !localDirExists) {
     args.push("--resync")

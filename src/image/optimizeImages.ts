@@ -19,6 +19,8 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
     skippedRootFiles: [],
     warnings: [],
     deletedLocal: [],
+    processedFonts: [],
+    skippedExistingFonts: [],
     processedVideos: [],
     skippedExistingVideos: [],
     processedVideoPreviews: [],

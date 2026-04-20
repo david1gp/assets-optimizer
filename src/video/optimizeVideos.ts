@@ -88,6 +88,8 @@ export async function optimizeVideos(options: OptimizeVideosOptions = {}): Promi
     skippedRootFiles: [],
     warnings: [],
     deletedLocal: [],
+    processedFonts: [],
+    skippedExistingFonts: [],
     processedVideos: [],
     skippedExistingVideos: [],
     processedVideoPreviews: [],

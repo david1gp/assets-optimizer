@@ -11,3 +11,11 @@ export interface VideoType {
   mimeType?: string
   image: ImageType
 }
+
+export interface FontType {
+  path: string
+  fontFamily: string
+  fontStyle: "normal" | "italic"
+  fontWeight: number
+  mimeType?: string
+}

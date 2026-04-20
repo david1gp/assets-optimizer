@@ -4,7 +4,8 @@
   "main": "./dist/index.js",
   "dependencies": {
     "image-size": "^2.0.2",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "ttf2woff2": "^8.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",

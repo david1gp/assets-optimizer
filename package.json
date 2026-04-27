@@ -1,6 +1,6 @@
 {
   "name": "@adaptive-ds/assets-optimizer",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "main": "./dist/index.js",
   "dependencies": {
     "image-size": "^2.0.2",

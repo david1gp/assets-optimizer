@@ -36,7 +36,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
   })
 
   if (options.generateImageList !== false) {
-    await generateImageList(imageOptimizedDir, imageListOutputPath, undefined, logger)
+    await generateImageList(imageOptimizedDir, imageListOutputPath, undefined, logger, imageOriginalsDir)
   }
 
   printSummary(result, logger)

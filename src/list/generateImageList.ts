@@ -17,10 +17,12 @@ export async function generateImageList(
   outputPath: string,
   imageTypeImportPath?: string,
   logger?: Logger,
+  altTextDirectory?: string,
 ): Promise<void> {
   const resolvedImageTypeImportPath = imageTypeImportPath ?? (await getOwnPackageName(import.meta.url))
   const existingImages = await loadExistingAssetList<ImageType>(outputPath, "imageList")
-  const imageMap = await processImageFiles(imageDirectory, existingImages, logger)
+  const imageAlts = altTextDirectory ? await loadImageAlts(altTextDirectory, logger) : {}
+  const imageMap = await processImageFiles(imageDirectory, existingImages, imageAlts, logger)
   const sorted = sortAssetMap(imageMap)
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
@@ -33,6 +35,7 @@ export async function generateImageList(
 async function processImageFiles(
   directory: string,
   existingImages: Record<string, ImageType>,
+  imageAlts: Record<string, string>,
   logger?: Logger,
 ): Promise<Record<string, ImageType>> {
   const imageMap: Record<string, ImageType> = {}
@@ -58,7 +61,7 @@ async function processImageFiles(
         path: relativePath,
         width: dimensions.width,
         height: dimensions.height,
-        alt: existingImages[key]?.alt || formatGeneratedImageAlt(fileName),
+        alt: imageAlts[key] || existingImages[key]?.alt || formatGeneratedImageAlt(fileName),
         mimeType: getImageMimeType(extension),
       }
     } catch (error) {
@@ -68,12 +71,38 @@ async function processImageFiles(
   return imageMap
 }
 
+async function loadImageAlts(directory: string, logger?: Logger): Promise<Record<string, string>> {
+  const imageAlts: Record<string, string> = {}
+
+  for (const filePath of await walkFiles(directory)) {
+    if (path.extname(filePath).toLowerCase() !== ".md") {
+      continue
+    }
+
+    try {
+      const key = normalizeGeneratedImageKey(getAssetKey(filePath))
+      const alt = formatMarkdownAlt(await fs.readFile(filePath, "utf-8"))
+      if (alt) {
+        imageAlts[key] = alt
+      }
+    } catch (error) {
+      logger?.error(`Error reading image alt ${filePath}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  return imageAlts
+}
+
 function normalizeGeneratedImageKey(key: string): string {
   return key.replace(/_[0-9a-f]{8}$/i, "")
 }
 
 function formatGeneratedImageAlt(fileName: string): string {
   return normalizeGeneratedImageKey(fileName).replace(/[-_]/g, " ")
+}
+
+function formatMarkdownAlt(content: string): string {
+  return content.replace(/\s+/g, " ").trim()
 }
 
 function createGeneratedImageListContent(imageMap: Record<string, ImageType>, imageTypeImportPath: string): string {

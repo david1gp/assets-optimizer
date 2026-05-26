@@ -77,6 +77,10 @@ export async function buildExpectedImages(
 
     for (const sourceFile of await walkFiles(entryPath)) {
       const extension = path.extname(sourceFile).toLowerCase()
+      if (extension === ".md") {
+        continue
+      }
+
       if (!supportedSourceExtensions.has(extension)) {
         result.warnings.push(`Skipped unsupported source file: ${path.relative(originalsDir, sourceFile)}`)
         console.warn(`Skipped unsupported source file: ${path.relative(originalsDir, sourceFile)}`)

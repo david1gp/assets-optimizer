@@ -7,7 +7,7 @@ import type { OptimizeFontsOptions } from "./OptimizeFontsOptions.js"
 import { createLogger } from "../shared/logger.js"
 import { printSummary } from "../shared/printSummary.js"
 import { walkFiles } from "../shared/walkFiles.js"
-import { supportedFontSourceExtensions } from "./supportedFontExtensions.js"
+import { supportedFontOutputExtensions, supportedFontSourceExtensions } from "./supportedFontExtensions.js"
 import { generateFontList } from "../list/generateFontList.js"
 import { parseFontFilename } from "./parseFontFilename.js"
 
@@ -38,6 +38,10 @@ async function processFontFile(
     const woff2Buffer = ttf2woff2(inputBuffer)
     await fs.writeFile(outputPath, woff2Buffer)
     result.processedFonts.push(relativePath)
+  } else if (supportedFontOutputExtensions.has(extension)) {
+    // Already in the optimized output format (e.g. .woff2): pass through unchanged.
+    await fs.copyFile(sourcePath, outputPath)
+    result.processedFonts.push(relativePath)
   }
 }
 
@@ -66,7 +70,7 @@ export async function optimizeFonts(options: OptimizeFontsOptions = {}): Promise
     for (const sourceFile of await walkFiles(fontOriginalsDir)) {
       const extension = path.extname(sourceFile).toLowerCase()
 
-      if (!supportedFontSourceExtensions.has(extension)) {
+      if (!supportedFontSourceExtensions.has(extension) && !supportedFontOutputExtensions.has(extension)) {
         result.warnings.push(`Skipped unsupported font source file: ${sourceFile}`)
         continue
       }

@@ -4,6 +4,8 @@ export interface OptimizeImagesOptions {
   imageOriginalsDir?: string
   imageOptimizedDir?: string
   allowRootImageFiles?: boolean
+  imageHashLength?: number
+  imageTypeImportPath?: string
   imageListOutputPath?: string
   generateImageList?: boolean
 }

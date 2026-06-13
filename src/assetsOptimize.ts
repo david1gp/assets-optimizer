@@ -1,8 +1,8 @@
 import type { AssetsOptimizeOptions } from "./AssetsOptimizeOptions.js"
 import type { AssetsOptimizeResult } from "./AssetsOptimizeResult.js"
+import { optimizeFonts } from "./font/optimizeFonts.js"
 import { optimizeImages } from "./image/optimizeImages.js"
 import { optimizeVideos } from "./video/optimizeVideos.js"
-import { optimizeFonts } from "./font/optimizeFonts.js"
 
 export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promise<AssetsOptimizeResult> {
   const [imageResult, videoResult, fontResult] = await Promise.all([
@@ -13,6 +13,8 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
           imageOriginalsDir: options.imageOriginalsDir,
           imageOptimizedDir: options.imageOptimizedDir,
           allowRootImageFiles: options.allowRootImageFiles,
+          imageHashLength: options.imageHashLength,
+          imageTypeImportPath: options.imageTypeImportPath,
           imageListOutputPath: options.imageListOutputPath,
           generateImageList: options.generateImageList,
         })

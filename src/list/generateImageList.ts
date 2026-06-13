@@ -18,11 +18,12 @@ export async function generateImageList(
   imageTypeImportPath?: string,
   logger?: Logger,
   altTextDirectory?: string,
+  hashLength = 8,
 ): Promise<void> {
   const resolvedImageTypeImportPath = imageTypeImportPath ?? (await getOwnPackageName(import.meta.url))
   const existingImages = await loadExistingAssetList<ImageType>(outputPath, "imageList")
-  const imageAlts = altTextDirectory ? await loadImageAlts(altTextDirectory, logger) : {}
-  const imageMap = await processImageFiles(imageDirectory, existingImages, imageAlts, logger)
+  const imageAlts = altTextDirectory ? await loadImageAlts(altTextDirectory, hashLength, logger) : {}
+  const imageMap = await processImageFiles(imageDirectory, existingImages, imageAlts, hashLength, logger)
   const sorted = sortAssetMap(imageMap)
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
@@ -36,6 +37,7 @@ async function processImageFiles(
   directory: string,
   existingImages: Record<string, ImageType>,
   imageAlts: Record<string, string>,
+  hashLength: number,
   logger?: Logger,
 ): Promise<Record<string, ImageType>> {
   const imageMap: Record<string, ImageType> = {}
@@ -54,14 +56,14 @@ async function processImageFiles(
       }
 
       const relativePath = path.relative(directory, filePath)
-      const key = normalizeGeneratedImageKey(getAssetKey(filePath))
+      const key = normalizeGeneratedImageKey(getAssetKey(filePath), hashLength)
       const fileName = path.basename(filePath, extension)
 
       imageMap[key] = {
         path: relativePath,
         width: dimensions.width,
         height: dimensions.height,
-        alt: imageAlts[key] || existingImages[key]?.alt || formatGeneratedImageAlt(fileName),
+        alt: imageAlts[key] || existingImages[key]?.alt || formatGeneratedImageAlt(fileName, hashLength),
         mimeType: getImageMimeType(extension),
       }
     } catch (error) {
@@ -71,7 +73,7 @@ async function processImageFiles(
   return imageMap
 }
 
-async function loadImageAlts(directory: string, logger?: Logger): Promise<Record<string, string>> {
+async function loadImageAlts(directory: string, hashLength: number, logger?: Logger): Promise<Record<string, string>> {
   const imageAlts: Record<string, string> = {}
 
   for (const filePath of await walkFiles(directory)) {
@@ -80,7 +82,7 @@ async function loadImageAlts(directory: string, logger?: Logger): Promise<Record
     }
 
     try {
-      const key = normalizeGeneratedImageKey(getAssetKey(filePath))
+      const key = normalizeGeneratedImageKey(getAssetKey(filePath), hashLength)
       const alt = formatMarkdownAlt(await fs.readFile(filePath, "utf-8"))
       if (alt) {
         imageAlts[key] = alt
@@ -93,12 +95,12 @@ async function loadImageAlts(directory: string, logger?: Logger): Promise<Record
   return imageAlts
 }
 
-function normalizeGeneratedImageKey(key: string): string {
-  return key.replace(/_[0-9a-f]{8}$/i, "")
+function normalizeGeneratedImageKey(key: string, hashLength: number): string {
+  return key.replace(new RegExp(`_[0-9a-f]{${hashLength}}$`, "i"), "")
 }
 
-function formatGeneratedImageAlt(fileName: string): string {
-  return normalizeGeneratedImageKey(fileName).replace(/[-_]/g, " ")
+function formatGeneratedImageAlt(fileName: string, hashLength: number): string {
+  return normalizeGeneratedImageKey(fileName, hashLength).replace(/[-_]/g, " ")
 }
 
 function formatMarkdownAlt(content: string): string {

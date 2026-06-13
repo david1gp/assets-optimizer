@@ -5,6 +5,7 @@ export interface ProcessImagesOptions {
   imageOriginalsDir: string
   imageOptimizedDir: string
   allowRootImageFiles: boolean
+  hashLength?: number
   result: AssetsOptimizeResult
   logger: Logger
 }

@@ -116,6 +116,31 @@ Video behavior:
 - video filenames and relative paths are kept as-is
 - stale processed videos are not deleted
 
+## Hash Length
+
+Output filenames are `<basename>_<hash>.<ext>`, where the hash defaults to 8 hex chars.
+Set `imageHashLength` to use a shorter (or longer) suffix:
+
+```ts
+await assetsOptimize({
+  imageHashLength: 3,
+})
+```
+
+```text
+images/1920x1080_webp/ship_PYM.webp  ->  public/images/ship_PYM_a1b.webp
+```
+
+The hash only busts cache when a single file's content changes — the basename already
+distinguishes different images, so cross-file collisions never matter. The only risk of a
+short hash is that an edited file re-hashes to the same suffix and its cache is not busted:
+roughly `1 / 16^length` per edit (≈ 1/4096 at length 3). The generated `imageList.ts`
+strips exactly `imageHashLength` hex chars to keep stable keys, so keep this value in sync
+with the existing list.
+
+`imageTypeImportPath` sets the `import type { ImageType } from "..."` line of the
+generated `imageList.ts` (defaults to this package's name).
+
 ## Transform Folder Format
 
 Folder names must use:

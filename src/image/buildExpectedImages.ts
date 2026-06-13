@@ -14,6 +14,7 @@ export async function buildExpectedImages(
   optimizedDir: string,
   result: AssetsOptimizeResult,
   allowRootImageFiles = false,
+  hashLength = 8,
 ): Promise<ExpectedImage[]> {
   const dirEntries = await fs.readdir(originalsDir, { withFileTypes: true })
   const expectedImages: ExpectedImage[] = []
@@ -43,7 +44,7 @@ export async function buildExpectedImages(
         continue
       }
 
-      const hash = createOutputHash(sourceBuffer, transform.normalized)
+      const hash = createOutputHash(sourceBuffer, transform.normalized, hashLength)
       const baseName = path.parse(entryPath).name
       const fileName = `${baseName}_${hash}.${transform.format}`
       const outputPath = path.join(optimizedDir, fileName)
@@ -87,7 +88,7 @@ export async function buildExpectedImages(
         continue
       }
       const sourceBuffer = await fs.readFile(sourceFile)
-      const hash = createOutputHash(sourceBuffer, transform.normalized)
+      const hash = createOutputHash(sourceBuffer, transform.normalized, hashLength)
       const baseName = path.parse(sourceFile).name
       const fileName = `${baseName}_${hash}.${transform.format}`
       const outputPath = path.join(optimizedDir, fileName)

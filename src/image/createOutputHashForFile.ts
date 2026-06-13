@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto"
 import fs from "node:fs"
 
-export async function createOutputHashForFile(sourcePath: string, transformSpec: string): Promise<string> {
+export async function createOutputHashForFile(
+  sourcePath: string,
+  transformSpec: string,
+  hashLength = 8,
+): Promise<string> {
   const hash = createHash("sha256")
 
   await new Promise<void>((resolve, reject) => {
@@ -13,5 +17,5 @@ export async function createOutputHashForFile(sourcePath: string, transformSpec:
     stream.on("error", reject)
   })
 
-  return hash.update(transformSpec).digest("hex").slice(0, 8)
+  return hash.update(transformSpec).digest("hex").slice(0, hashLength)
 }

@@ -1,16 +1,16 @@
 import fs from "node:fs/promises"
 import path from "node:path"
+import { parseFontFilename } from "../font/parseFontFilename.js"
+import { supportedFontOutputExtensions } from "../font/supportedFontExtensions.js"
 import { getOwnPackageName } from "../shared/getOwnPackageName.js"
 import { isMissingDirError } from "../shared/isMissingDirError.js"
 import type { Logger } from "../shared/logger.js"
 import { walkFiles } from "../shared/walkFiles.js"
-import { supportedFontOutputExtensions } from "../font/supportedFontExtensions.js"
 import type { FontType } from "./AssetListTypes.js"
 import { formatGeneratedCodeFile } from "./formatGeneratedCodeFile.js"
 import { getAssetKey } from "./getAssetKey.js"
 import { loadExistingAssetList } from "./loadExistingAssetList.js"
 import { sortAssetMap } from "./sortAssetMap.js"
-import { parseFontFilename } from "../font/parseFontFilename.js"
 
 export async function generateFontList(
   fontsDirectory: string,

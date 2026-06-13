@@ -1,5 +1,5 @@
-import { imageSize } from "image-size"
 import path from "node:path"
+import { imageSize } from "image-size"
 import type { TransformSpec } from "./TransformSpec.js"
 
 export function createRootImageTransform(sourceFile: string, sourceBuffer: Buffer): TransformSpec | null {

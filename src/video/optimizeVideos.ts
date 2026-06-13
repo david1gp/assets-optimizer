@@ -1,17 +1,17 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
+import { generateVideoList } from "../list/generateVideoList.js"
 import { dirExists } from "../shared/dirExists.js"
-import type { OptimizeVideosOptions } from "./OptimizeVideosOptions.js"
 import { createLogger } from "../shared/logger.js"
 import { printSummary } from "../shared/printSummary.js"
-import { supportedVideoSourceExtensions } from "./supportedVideoSourceExtensions.js"
 import { walkFiles } from "../shared/walkFiles.js"
-import { runFfmpeg } from "./runFfmpeg.js"
 import { createVideoArgs } from "./createVideoArgs.js"
 import { createVideoPreviewArgs } from "./createVideoPreviewArgs.js"
 import { createVideoPreviewPath } from "./createVideoPreviewPath.js"
-import { generateVideoList } from "../list/generateVideoList.js"
+import type { OptimizeVideosOptions } from "./OptimizeVideosOptions.js"
+import { runFfmpeg } from "./runFfmpeg.js"
+import { supportedVideoSourceExtensions } from "./supportedVideoSourceExtensions.js"
 
 async function processLocalVideos(
   videoOriginalsDir: string,

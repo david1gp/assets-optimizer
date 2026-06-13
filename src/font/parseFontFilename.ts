@@ -49,7 +49,7 @@ export function parseFontFilename(filename: string): {
       fontWeight = weightMap[second]!
     } else if (second.match(/^\d{3}$/)) {
       fontFamily = first
-      fontWeight = parseInt(second, 10)
+      fontWeight = Number.parseInt(second, 10)
     } else if (second === "Italic") {
       fontFamily = first
       fontStyle = "italic"
@@ -68,7 +68,7 @@ export function parseFontFilename(filename: string): {
     }
 
     if (last.match(/^\d{3}$/)) {
-      fontWeight = parseInt(last, 10)
+      fontWeight = Number.parseInt(last, 10)
       parts.pop()
     } else if (last in weightMap) {
       fontWeight = weightMap[last]!

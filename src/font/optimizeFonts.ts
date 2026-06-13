@@ -1,15 +1,15 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import ttf2woff2 from "ttf2woff2"
-import { dirExists } from "../shared/dirExists.js"
 import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
-import type { OptimizeFontsOptions } from "./OptimizeFontsOptions.js"
+import { generateFontList } from "../list/generateFontList.js"
+import { dirExists } from "../shared/dirExists.js"
 import { createLogger } from "../shared/logger.js"
 import { printSummary } from "../shared/printSummary.js"
 import { walkFiles } from "../shared/walkFiles.js"
-import { supportedFontOutputExtensions, supportedFontSourceExtensions } from "./supportedFontExtensions.js"
-import { generateFontList } from "../list/generateFontList.js"
+import type { OptimizeFontsOptions } from "./OptimizeFontsOptions.js"
 import { parseFontFilename } from "./parseFontFilename.js"
+import { supportedFontOutputExtensions, supportedFontSourceExtensions } from "./supportedFontExtensions.js"
 
 async function processFontFile(
   sourcePath: string,

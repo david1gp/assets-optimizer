@@ -6,6 +6,7 @@ export interface ProcessVideosOptions {
   videoOriginalsDir: string
   videoOptimizedDir: string
   videoPreviewQuality: number
+  videoPreviewHashLength: number
   result: AssetsOptimizeResult
   logger: Logger
 }

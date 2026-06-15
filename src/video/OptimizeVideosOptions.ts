@@ -6,4 +6,5 @@ export interface OptimizeVideosOptions {
   videoListOutputPath?: string
   generateVideoList?: boolean
   videoPreviewQuality?: number
+  videoPreviewHashLength?: number
 }

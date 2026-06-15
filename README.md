@@ -52,9 +52,9 @@ Quick link
 10. If `rcloneRemote` is configured, uploads missing optimized images to the remote with cache headers
 11. If `rcloneRemote` is configured, deletes stale optimized images from the remote
 12. Runs a separate optional video pass from `videos` to `public/videos`
-13. Generates a `.jpg` preview beside each processed video using the processed video dimensions
+13. Generates a hashed `<basename>_<hash>.webp` preview beside each processed video (full resolution, `sharp`-encoded)
 14. Keeps video filenames unchanged and skips any processed video or preview that already exists
-15. If `rcloneRemote` is configured, uploads missing processed videos and previews to the remote without deleting manual variants
+15. If `rcloneRemote` is configured, uploads videos with a short cache header and their hashed previews with a long (immutable) cache header
 16. Generates `src/app/assets/imageList.ts` and `src/app/assets/videoList.ts` by default
 17. Prints a clear summary of what changed
 
@@ -99,9 +99,9 @@ videos/
 
 public/videos/
   hero.mp4
-  hero.jpg
+  hero_a1b2c3d4.webp
   intro.webm
-  intro.jpg
+  intro_9f8e7d6c.webp
 ```
 
 Video behavior:
@@ -110,10 +110,15 @@ Video behavior:
 - if `rcloneRemote` is configured, source videos sync through `video-originals`
 - if `rcloneRemote` is configured, processed videos sync through `video-processed`
 - missing processed videos are created with `ffmpeg`
-- missing preview images are created as `.jpg` files beside processed videos
+- missing preview images are created beside processed videos as `<basename>_<hash>.webp`:
+  `ffmpeg` extracts a representative frame at full resolution, then `sharp` re-encodes it to
+  webp at `videoPreviewQuality` (default `65`, the same encoder/quality scale used for images)
+- the preview hash is derived from the processed video's content, so the preview filename busts
+  when the video changes; previews can therefore be cached immutably even though video filenames
+  are not hashed
 - existing processed videos are skipped and preserved as manual transformations
-- existing preview images are skipped and preserved
-- video filenames and relative paths are kept as-is
+- existing previews are skipped; stale previews from a previous hash are removed when regenerated
+- video filenames and relative paths are kept as-is (optimize them by hand)
 - stale processed videos are not deleted
 
 ## Hash Length
@@ -190,7 +195,7 @@ import { assetsProcess } from "@adaptive-ds/assets-optimizer"
 await assetsProcess()
 ```
 
-This generates optimized images, processed videos, video preview JPGs, `imageList.ts`, and `videoList.ts` in one run. 
+This generates optimized images, processed videos, hashed webp video previews, `imageList.ts`, and `videoList.ts` in one run. 
 
 Existing image alt text and existing video preview alt text are preserved when the generated files already exist.
 
@@ -220,7 +225,8 @@ This package is built for a workflow with two local directories:
 
 - Source videos live directly in `videos/` (no transform folders)
 - Each video is copied to the output directory using `ffmpeg`
-- A JPEG preview is generated beside each processed video
+- A hashed, full-resolution webp preview (`sharp`-encoded at `videoPreviewQuality`, default `65`) is generated beside each processed video
+- Video filenames stay unhashed (optimize length/etc. by hand); previews are content-hashed so they cache-bust on change
 - Existing processed videos and previews are preserved as-is
 - A TypeScript list file is generated with all processed video references
 

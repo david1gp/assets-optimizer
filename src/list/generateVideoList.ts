@@ -5,6 +5,7 @@ import { getOwnPackageName } from "../shared/getOwnPackageName.js"
 import { isMissingDirError } from "../shared/isMissingDirError.js"
 import type { Logger } from "../shared/logger.js"
 import { walkFiles } from "../shared/walkFiles.js"
+import { computeVideoPreviewHash } from "../video/computeVideoPreviewHash.js"
 import { createVideoPreviewPath } from "../video/createVideoPreviewPath.js"
 import { supportedVideoSourceExtensions } from "../video/supportedVideoSourceExtensions.js"
 import type { ImageType, VideoType } from "./AssetListTypes.js"
@@ -16,12 +17,16 @@ import { sortAssetMap } from "./sortAssetMap.js"
 export async function generateVideoList(
   videosDirectory: string,
   outputPath: string,
+  videoPreviewQuality: number,
+  videoPreviewHashLength: number,
   videoTypeImportPath?: string,
   logger?: Logger,
 ): Promise<void> {
   const resolvedVideoTypeImportPath = videoTypeImportPath ?? (await getOwnPackageName(import.meta.url))
   const existingVideos = await loadExistingAssetList<VideoType>(outputPath, "videoList")
-  const videoMap = sortAssetMap(await processVideoFiles(videosDirectory, existingVideos))
+  const videoMap = sortAssetMap(
+    await processVideoFiles(videosDirectory, existingVideos, videoPreviewQuality, videoPreviewHashLength),
+  )
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
   await Bun.write(outputPath, createGeneratedVideoListContent(videoMap, resolvedVideoTypeImportPath))
@@ -33,6 +38,8 @@ export async function generateVideoList(
 async function processVideoFiles(
   directory: string,
   existingVideos: Record<string, VideoType>,
+  videoPreviewQuality: number,
+  videoPreviewHashLength: number,
 ): Promise<Record<string, VideoType>> {
   const videoMap: Record<string, VideoType> = {}
 
@@ -55,8 +62,14 @@ async function processVideoFiles(
 
     const relativePath = path.relative(directory, filePath)
     const key = getAssetKey(filePath)
-    const previewPath = createVideoPreviewPath(filePath)
-    const previewBuffer = await fs.readFile(previewPath)
+    const previewHash = await computeVideoPreviewHash(filePath, videoPreviewQuality, videoPreviewHashLength)
+    const previewPath = createVideoPreviewPath(filePath, previewHash)
+    let previewBuffer: Buffer
+    try {
+      previewBuffer = await fs.readFile(previewPath)
+    } catch {
+      continue
+    }
     const previewDimensions = imageSize(previewBuffer)
     if (!previewDimensions.width || !previewDimensions.height) {
       continue
@@ -73,7 +86,7 @@ async function processVideoFiles(
         width: previewDimensions.width,
         height: previewDimensions.height,
         alt: existingPreview?.alt || fileName.replace(/[-_]/g, " "),
-        mimeType: "image/jpeg",
+        mimeType: "image/webp",
       } satisfies ImageType,
     }
   }

@@ -15,6 +15,7 @@ export interface AssetsOptimizeOptions {
   videoListOutputPath?: string
   generateVideoList?: boolean
   videoPreviewQuality?: number
+  videoPreviewHashLength?: number
   processFonts?: boolean
   fontOriginalsDir?: string
   fontOptimizedDir?: string

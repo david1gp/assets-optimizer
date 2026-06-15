@@ -4,14 +4,16 @@ import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
 import { dirExists } from "../shared/dirExists.js"
 import type { Logger } from "../shared/logger.js"
 import { walkFiles } from "../shared/walkFiles.js"
-import { createVideoPreviewArgs } from "./createVideoPreviewArgs.js"
+import { computeVideoPreviewHash } from "./computeVideoPreviewHash.js"
+import { createVideoPreviewImage } from "./createVideoPreviewImage.js"
 import { createVideoPreviewPath } from "./createVideoPreviewPath.js"
-import { runFfmpeg } from "./runFfmpeg.js"
+import { removeStaleVideoPreviews } from "./removeStaleVideoPreviews.js"
 import { supportedVideoSourceExtensions } from "./supportedVideoSourceExtensions.js"
 
 export async function ensureVideoPreviews(
   videoOptimizedDir: string,
   videoPreviewQuality: number,
+  videoPreviewHashLength: number,
   cwd: string,
   result: AssetsOptimizeResult,
   logger: Logger,
@@ -26,7 +28,8 @@ export async function ensureVideoPreviews(
       continue
     }
 
-    const previewPath = createVideoPreviewPath(filePath)
+    const hash = await computeVideoPreviewHash(filePath, videoPreviewQuality, videoPreviewHashLength)
+    const previewPath = createVideoPreviewPath(filePath, hash)
     const relativePreviewPath = path.relative(videoOptimizedDir, previewPath)
 
     try {
@@ -35,8 +38,9 @@ export async function ensureVideoPreviews(
       continue
     } catch {}
 
+    await removeStaleVideoPreviews(filePath, previewPath)
     await fs.mkdir(path.dirname(previewPath), { recursive: true })
-    await runFfmpeg(createVideoPreviewArgs(filePath, previewPath, videoPreviewQuality), cwd, logger)
+    await createVideoPreviewImage(filePath, previewPath, videoPreviewQuality, cwd, logger)
     result.processedVideoPreviews.push(relativePreviewPath)
   }
 }

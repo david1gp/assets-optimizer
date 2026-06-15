@@ -40,6 +40,7 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
           videoListOutputPath: options.videoListOutputPath,
           generateVideoList: options.generateVideoList,
           videoPreviewQuality: options.videoPreviewQuality,
+          videoPreviewHashLength: options.videoPreviewHashLength,
         })
       : Promise.resolve({
           processed: [],

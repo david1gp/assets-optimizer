@@ -29,6 +29,7 @@ export async function processAssets(options: ProcessAssetsOptions): Promise<void
     assetsOptimizeLocallyFn,
     imageCacheControl = "Cache-Control:public, max-age=31536000, immutable",
     videoCacheControl = "Cache-Control:public, max-age=259200, immutable",
+    videoPreviewCacheControl = "Cache-Control:public, max-age=31536000, immutable",
     fontCacheControl = "Cache-Control:public, max-age=31536000, immutable",
     logLevel,
     ...assetsOptimizeOptions
@@ -101,7 +102,17 @@ export async function processAssets(options: ProcessAssetsOptions): Promise<void
 
   if (syncVideos) {
     if ((logLevel ?? 3) >= 2) console.log(`Uploading optimized videos: ${videoOptimizedDir} -> ${destVideos}`)
-    await runRclone(["sync", videoOptimizedDir, destVideos, "--header-upload", videoCacheControl], cwd)
+    // Videos keep stable, unhashed filenames (optimized by hand), so they get a short cache.
+    // Their hashed preview images are excluded here and uploaded separately with a long cache.
+    await runRclone(
+      ["sync", videoOptimizedDir, destVideos, "--header-upload", videoCacheControl, "--exclude", "*.webp"],
+      cwd,
+    )
+    // Hashed video preview images are content-addressed, so they can be cached immutably.
+    await runRclone(
+      ["sync", videoOptimizedDir, destVideos, "--header-upload", videoPreviewCacheControl, "--include", "*.webp"],
+      cwd,
+    )
   }
 
   if (syncFonts) {

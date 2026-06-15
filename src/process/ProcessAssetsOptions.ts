@@ -24,5 +24,6 @@ export interface ProcessAssetsOptions extends AssetsOptimizeOptions {
   assetsOptimizeLocallyFn?: () => Promise<void>
   imageCacheControl?: string
   videoCacheControl?: string
+  videoPreviewCacheControl?: string
   fontCacheControl?: string
 }

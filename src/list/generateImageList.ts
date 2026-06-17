@@ -59,6 +59,10 @@ async function processImageFiles(
       const key = normalizeGeneratedImageKey(getAssetKey(filePath), hashLength)
       const fileName = path.basename(filePath, extension)
 
+      if (imageMap[key]) {
+        logger?.warn(`Duplicate image key "${key}": ${relativePath} overwrites ${imageMap[key].path} (rename one source)`)
+      }
+
       imageMap[key] = {
         path: relativePath,
         width: dimensions.width,

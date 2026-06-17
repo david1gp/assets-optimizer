@@ -1,7 +1,6 @@
 export interface AssetsOptimizeResult {
   processed: string[]
   skippedExisting: string[]
-  skippedRootFiles: string[]
   warnings: string[]
   deletedLocal: string[]
   processedFonts: string[]

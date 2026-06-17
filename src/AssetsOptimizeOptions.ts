@@ -4,7 +4,6 @@ export interface AssetsOptimizeOptions {
   processImages?: boolean
   imageOriginalsDir?: string
   imageOptimizedDir?: string
-  allowRootImageFiles?: boolean
   imageHashLength?: number
   imageTypeImportPath?: string
   imageListOutputPath?: string

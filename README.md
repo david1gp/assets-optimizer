@@ -43,7 +43,7 @@ Quick link
 1. Resolves the project name from `package.json.name`
 2. If `rcloneRemote` is configured, uses that project name as the base path on the remote
 3. If `rcloneRemote` is configured, syncs originals between the remote and `images`
-4. Scans transform folders like `1920x1080_jpg`
+4. Scans transform folders like `1920x1080_jpg`, optionally nested in grouping folders
 5. Processes matching image source files with `sharp`
 6. Writes flat optimized images into `public/images`
 7. Names image files as `<basename>_<hash>.<ext>`
@@ -67,28 +67,33 @@ That means image cache keys change when the source image changes or when you cha
 
 ## Folder Convention
 
-Original files belong in transform folders inside `images`.
+Original files belong under one transform folder inside `images`. Arbitrary grouping folders may appear before and after the transform folder.
 
 Example:
 
 ```text
 images/
-  1920x1080_jpg/
-    living-room.png
-  1200x1200_webp/
-    kitchen.jpg
+  interiors/
+    homes/
+      1920x1080_jpg/
+        hero/
+          living-room.png
+  products/
+    1200x1200_webp/
+      kitchen.jpg
 ```
 
 This produces flat optimized image output like:
 
 ```text
 public/images/
-  kitchen_a1b2c3d4.jpg
   living-room_9f8e7d6c.jpg
   kitchen_7c6b5a4d.webp
 ```
 
-Root-level files directly inside `images` are intentionally skipped and warned on every run.
+Files that are not inside a transform folder are ignored. Folders whose name contains `ignore` are skipped entirely.
+
+Only the first transform folder in a path is used. If another transform-looking folder appears below it, that nested folder is skipped with a warning.
 
 Videos are handled separately and do not use transform folders:
 
@@ -212,7 +217,8 @@ This package is built for a workflow with two local directories:
 
 ### Images
 
-- Source images live in transform folders like `1920x1080_jpg` inside `images/`
+- Source images live below transform folders like `1920x1080_jpg` inside `images/`
+- Grouping folders may appear before and after the transform folder
 - Each source file is resized to fit within the specified bounds without enlargement
 - Auto-rotation is applied based on EXIF data
 - Output quality defaults to 80%
@@ -258,7 +264,7 @@ That means:
 
 ## Recommended Workflow
 
-1. Add or sync originals into `images/<transform-folder>/`
+1. Add or sync originals into `images/<grouping-folders>/<transform-folder>/<grouping-folders>/`
 2. Run your local image pipeline entrypoint
 3. Regenerate your typed image list
 4. Reference the generated hashed filenames from app code or derived metadata
@@ -267,7 +273,7 @@ That means:
 
 If your project currently stores source images directly at the root of `images`, this package will skip them by design.
 
-Before adopting it fully, move originals into explicit transform folders such as:
+Before adopting it fully, move originals below explicit transform folders such as:
 
 ```text
 images/1920x1080_jpg/

@@ -5,18 +5,12 @@ import { buildExpectedImages } from "./buildExpectedImages.js"
 import type { ProcessImagesOptions } from "./ProcessImagesOptions.js"
 
 export async function processImages(options: ProcessImagesOptions): Promise<void> {
-  const { allowRootImageFiles, hashLength, imageOptimizedDir, imageOriginalsDir, result } = options
+  const { hashLength, imageOptimizedDir, imageOriginalsDir, result } = options
 
   await fs.mkdir(imageOriginalsDir, { recursive: true })
   await fs.mkdir(imageOptimizedDir, { recursive: true })
 
-  const expectedImages = await buildExpectedImages(
-    imageOriginalsDir,
-    imageOptimizedDir,
-    result,
-    allowRootImageFiles,
-    hashLength,
-  )
+  const expectedImages = await buildExpectedImages(imageOriginalsDir, imageOptimizedDir, result, hashLength)
   const expectedFileNames = new Set(expectedImages.map((image) => image.fileName))
 
   const localOptimizedFiles = await listLocalFiles(imageOptimizedDir)

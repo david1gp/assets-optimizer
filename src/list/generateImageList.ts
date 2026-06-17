@@ -1,7 +1,9 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import { imageSize } from "image-size"
+import { parseTransformSpec } from "../image/parseTransformSpec.js"
 import { getOwnPackageName } from "../shared/getOwnPackageName.js"
+import { isIgnoredDir } from "../shared/isIgnoredDir.js"
 import type { Logger } from "../shared/logger.js"
 import { walkFiles } from "../shared/walkFiles.js"
 import type { ImageType } from "./AssetListTypes.js"
@@ -60,7 +62,9 @@ async function processImageFiles(
       const fileName = path.basename(filePath, extension)
 
       if (imageMap[key]) {
-        logger?.warn(`Duplicate image key "${key}": ${relativePath} overwrites ${imageMap[key].path} (rename one source)`)
+        logger?.warn(
+          `Duplicate image key "${key}": ${relativePath} overwrites ${imageMap[key].path} (rename one source)`,
+        )
       }
 
       imageMap[key] = {
@@ -80,23 +84,64 @@ async function processImageFiles(
 async function loadImageAlts(directory: string, hashLength: number, logger?: Logger): Promise<Record<string, string>> {
   const imageAlts: Record<string, string> = {}
 
-  for (const filePath of await walkFiles(directory)) {
-    if (path.extname(filePath).toLowerCase() !== ".md") {
-      continue
-    }
-
-    try {
-      const key = normalizeGeneratedImageKey(getAssetKey(filePath), hashLength)
-      const alt = formatMarkdownAlt(await fs.readFile(filePath, "utf-8"))
-      if (alt) {
-        imageAlts[key] = alt
-      }
-    } catch (error) {
-      logger?.error(`Error reading image alt ${filePath}: ${error instanceof Error ? error.message : String(error)}`)
-    }
+  for (const filePath of await collectTransformMarkdownFiles(directory)) {
+    await loadImageAlt(filePath, imageAlts, hashLength, logger)
   }
 
   return imageAlts
+}
+
+async function collectTransformMarkdownFiles(directory: string): Promise<string[]> {
+  const files: string[] = []
+  await collectFromDir(directory, false)
+  return files
+
+  async function collectFromDir(dir: string, inTransform: boolean): Promise<void> {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const entryPath = path.join(dir, entry.name)
+
+      if (entry.isFile()) {
+        if (inTransform && path.extname(entry.name).toLowerCase() === ".md") {
+          files.push(entryPath)
+        }
+        continue
+      }
+
+      if (!entry.isDirectory()) {
+        continue
+      }
+
+      if (isIgnoredDir(entry.name)) {
+        continue
+      }
+
+      const transform = parseTransformSpec(entry.name)
+      if (inTransform && transform) {
+        continue
+      }
+
+      await collectFromDir(entryPath, inTransform || transform !== null)
+    }
+  }
+}
+
+async function loadImageAlt(
+  filePath: string,
+  imageAlts: Record<string, string>,
+  hashLength: number,
+  logger?: Logger,
+): Promise<void> {
+  try {
+    const key = normalizeGeneratedImageKey(getAssetKey(filePath), hashLength)
+    const alt = formatMarkdownAlt(await fs.readFile(filePath, "utf-8"))
+    if (alt) {
+      imageAlts[key] = alt
+    }
+  } catch (error) {
+    logger?.error(`Error reading image alt ${filePath}: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 function normalizeGeneratedImageKey(key: string, hashLength: number): string {

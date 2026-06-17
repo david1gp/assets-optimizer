@@ -2,9 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
 import { isIgnoredDir } from "../shared/isIgnoredDir.js"
-import { walkFiles } from "../shared/walkFiles.js"
 import { createOutputHash } from "./createOutputHash.js"
-import { createRootImageTransform } from "./createRootImageTransform.js"
 import { type ExpectedImage } from "./ExpectedImage.js"
 import { parseTransformSpec } from "./parseTransformSpec.js"
 import { processImage } from "./processImage.js"
@@ -15,23 +13,21 @@ export async function buildExpectedImages(
   originalsDir: string,
   optimizedDir: string,
   result: AssetsOptimizeResult,
-  allowRootImageFiles = false,
   hashLength = 8,
 ): Promise<ExpectedImage[]> {
   const expectedImages: ExpectedImage[] = []
 
-  await collectFromDir(originalsDir, true)
+  await collectFromDir(originalsDir)
 
   return expectedImages
 
-  async function collectFromDir(dir: string, isRoot: boolean): Promise<void> {
+  async function collectFromDir(dir: string): Promise<void> {
     const dirEntries = await fs.readdir(dir, { withFileTypes: true })
 
     for (const entry of dirEntries) {
       const entryPath = path.join(dir, entry.name)
 
       if (entry.isFile()) {
-        await handleLooseFile(entryPath, entry.name, isRoot)
         continue
       }
 
@@ -52,45 +48,12 @@ export async function buildExpectedImages(
 
       // Not a transform folder: treat it as a logical grouping directory and
       // recurse so transform folders can live in subdirs of the originals dir.
-      await collectFromDir(entryPath, false)
+      await collectFromDir(entryPath)
     }
-  }
-
-  async function handleLooseFile(entryPath: string, name: string, isRoot: boolean): Promise<void> {
-    if (!isRoot) {
-      const relativeName = path.relative(originalsDir, entryPath)
-      result.warnings.push(`Skipped file outside transform folder: ${relativeName}`)
-      console.warn(`Skipped file outside transform folder: ${relativeName}`)
-      return
-    }
-
-    if (!allowRootImageFiles) {
-      result.skippedRootFiles.push(name)
-      result.warnings.push(`Skipped root original file: ${name}`)
-      console.warn(`Skipped root original file: ${name}`)
-      return
-    }
-
-    const extension = path.extname(name).toLowerCase()
-    if (!supportedSourceExtensions.has(extension)) {
-      result.warnings.push(`Skipped unsupported root source file: ${name}`)
-      console.warn(`Skipped unsupported root source file: ${name}`)
-      return
-    }
-
-    const sourceBuffer = await fs.readFile(entryPath)
-    const transform = createRootImageTransform(entryPath, sourceBuffer)
-    if (!transform) {
-      result.warnings.push(`Skipped root source file with unsupported output format: ${name}`)
-      console.warn(`Skipped root source file with unsupported output format: ${name}`)
-      return
-    }
-
-    await emitImage(sourceBuffer, entryPath, transform)
   }
 
   async function handleTransformDir(transformDir: string, transform: TransformSpec): Promise<void> {
-    for (const sourceFile of await walkFiles(transformDir)) {
+    for (const sourceFile of await collectTransformFiles(transformDir, transformDir)) {
       const extension = path.extname(sourceFile).toLowerCase()
       if (extension === ".md") {
         continue
@@ -105,6 +68,41 @@ export async function buildExpectedImages(
       const sourceBuffer = await fs.readFile(sourceFile)
       await emitImage(sourceBuffer, sourceFile, transform)
     }
+  }
+
+  async function collectTransformFiles(dir: string, transformDir: string): Promise<string[]> {
+    const dirEntries = await fs.readdir(dir, { withFileTypes: true })
+    const files: string[] = []
+
+    for (const entry of dirEntries) {
+      const entryPath = path.join(dir, entry.name)
+
+      if (entry.isFile()) {
+        files.push(entryPath)
+        continue
+      }
+
+      if (!entry.isDirectory()) {
+        continue
+      }
+
+      if (isIgnoredDir(entry.name)) {
+        continue
+      }
+
+      const nestedTransform = parseTransformSpec(entry.name)
+      if (nestedTransform) {
+        const relativePath = path.relative(originalsDir, entryPath)
+        const parentTransform = path.relative(originalsDir, transformDir)
+        result.warnings.push(`Skipped nested transform folder: ${relativePath} is inside ${parentTransform}`)
+        console.warn(`Skipped nested transform folder: ${relativePath} is inside ${parentTransform}`)
+        continue
+      }
+
+      files.push(...(await collectTransformFiles(entryPath, transformDir)))
+    }
+
+    return files
   }
 
   async function emitImage(sourceBuffer: Buffer, sourceFile: string, transform: TransformSpec): Promise<void> {

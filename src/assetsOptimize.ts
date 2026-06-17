@@ -12,7 +12,6 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
           logLevel: options.logLevel,
           imageOriginalsDir: options.imageOriginalsDir,
           imageOptimizedDir: options.imageOptimizedDir,
-          allowRootImageFiles: options.allowRootImageFiles,
           imageHashLength: options.imageHashLength,
           imageTypeImportPath: options.imageTypeImportPath,
           imageListOutputPath: options.imageListOutputPath,
@@ -21,7 +20,6 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
       : Promise.resolve({
           processed: [],
           skippedExisting: [],
-          skippedRootFiles: [],
           warnings: [],
           deletedLocal: [],
           processedFonts: [],
@@ -45,7 +43,6 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
       : Promise.resolve({
           processed: [],
           skippedExisting: [],
-          skippedRootFiles: [],
           warnings: [],
           deletedLocal: [],
           processedFonts: [],
@@ -67,7 +64,6 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
       : Promise.resolve({
           processed: [],
           skippedExisting: [],
-          skippedRootFiles: [],
           warnings: [],
           deletedLocal: [],
           processedFonts: [],
@@ -82,7 +78,6 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
   const result: AssetsOptimizeResult = {
     processed: imageResult.processed,
     skippedExisting: imageResult.skippedExisting,
-    skippedRootFiles: imageResult.skippedRootFiles,
     warnings: [...imageResult.warnings, ...videoResult.warnings, ...fontResult.warnings],
     deletedLocal: imageResult.deletedLocal,
     processedFonts: fontResult.processedFonts,

@@ -1,6 +1,7 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
+import { isIgnoredDir } from "../shared/isIgnoredDir.js"
 import { walkFiles } from "../shared/walkFiles.js"
 import { createOutputHash } from "./createOutputHash.js"
 import { createRootImageTransform } from "./createRootImageTransform.js"
@@ -35,6 +36,11 @@ export async function buildExpectedImages(
       }
 
       if (!entry.isDirectory()) {
+        continue
+      }
+
+      // Silently skip ignored folders so their contents are never reported.
+      if (isIgnoredDir(entry.name)) {
         continue
       }
 

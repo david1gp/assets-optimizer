@@ -13,6 +13,7 @@ import { loadExistingAssetList } from "./loadExistingAssetList.js"
 import { sortAssetMap } from "./sortAssetMap.js"
 
 const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".tiff", ".svg"])
+const IMAGE_ALT_EXTENSIONS = new Set([".txt", ".md"])
 
 export async function generateImageList(
   imageDirectory: string,
@@ -84,17 +85,17 @@ async function processImageFiles(
 async function loadImageAlts(directory: string, hashLength: number, logger?: Logger): Promise<Record<string, string>> {
   const imageAlts: Record<string, string> = {}
 
-  for (const filePath of await collectTransformMarkdownFiles(directory)) {
+  for (const filePath of await collectTransformAltFiles(directory)) {
     await loadImageAlt(filePath, imageAlts, hashLength, logger)
   }
 
   return imageAlts
 }
 
-async function collectTransformMarkdownFiles(directory: string): Promise<string[]> {
+async function collectTransformAltFiles(directory: string): Promise<string[]> {
   const files: string[] = []
   await collectFromDir(directory, false)
-  return files
+  return files.sort((a, b) => path.extname(a).localeCompare(path.extname(b)))
 
   async function collectFromDir(dir: string, inTransform: boolean): Promise<void> {
     const entries = await fs.readdir(dir, { withFileTypes: true })
@@ -103,7 +104,7 @@ async function collectTransformMarkdownFiles(directory: string): Promise<string[
       const entryPath = path.join(dir, entry.name)
 
       if (entry.isFile()) {
-        if (inTransform && path.extname(entry.name).toLowerCase() === ".md") {
+        if (inTransform && IMAGE_ALT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
           files.push(entryPath)
         }
         continue

@@ -203,6 +203,7 @@ await assetsProcess()
 This generates optimized images, processed videos, hashed webp video previews, `imageList.ts`, and `videoList.ts` in one run. 
 
 Existing image alt text and existing video preview alt text are preserved when the generated files already exist.
+Image alt text can also be provided with a same-basename `.txt` or `.md` file next to the source image inside a transform folder. If both exist, `.txt` is used and `.md` is the fallback.
 
 ## Local folders
 

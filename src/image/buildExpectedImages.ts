@@ -9,6 +9,8 @@ import { processImage } from "./processImage.js"
 import { supportedSourceExtensions } from "./supportedSourceExtensions.js"
 import type { TransformSpec } from "./TransformSpec.js"
 
+const IMAGE_ALT_EXTENSIONS = new Set([".txt", ".md"])
+
 export async function buildExpectedImages(
   originalsDir: string,
   optimizedDir: string,
@@ -55,7 +57,7 @@ export async function buildExpectedImages(
   async function handleTransformDir(transformDir: string, transform: TransformSpec): Promise<void> {
     for (const sourceFile of await collectTransformFiles(transformDir, transformDir)) {
       const extension = path.extname(sourceFile).toLowerCase()
-      if (extension === ".md") {
+      if (IMAGE_ALT_EXTENSIONS.has(extension)) {
         continue
       }
 

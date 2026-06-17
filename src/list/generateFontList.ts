@@ -9,7 +9,6 @@ import { walkFiles } from "../shared/walkFiles.js"
 import type { FontType } from "./AssetListTypes.js"
 import { formatGeneratedCodeFile } from "./formatGeneratedCodeFile.js"
 import { getAssetKey } from "./getAssetKey.js"
-import { loadExistingAssetList } from "./loadExistingAssetList.js"
 import { sortAssetMap } from "./sortAssetMap.js"
 
 export async function generateFontList(
@@ -19,8 +18,7 @@ export async function generateFontList(
   logger?: Logger,
 ): Promise<void> {
   const resolvedFontTypeImportPath = fontTypeImportPath ?? (await getOwnPackageName(import.meta.url))
-  const existingFonts = await loadExistingAssetList<FontType>(outputPath, "fontList")
-  const fontMap = sortAssetMap(await processFontFiles(fontsDirectory, existingFonts))
+  const fontMap = sortAssetMap(await processFontFiles(fontsDirectory))
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
   await Bun.write(outputPath, createGeneratedFontListContent(fontMap, resolvedFontTypeImportPath))
@@ -29,10 +27,7 @@ export async function generateFontList(
   logger?.summary(`Generated ${Object.keys(fontMap).length} fonts to ${outputPath}`)
 }
 
-async function processFontFiles(
-  directory: string,
-  existingFonts: Record<string, FontType>,
-): Promise<Record<string, FontType>> {
+async function processFontFiles(directory: string): Promise<Record<string, FontType>> {
   const fontMap: Record<string, FontType> = {}
 
   let filePaths: string[]

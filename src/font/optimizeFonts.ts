@@ -16,12 +16,11 @@ async function processFontFile(
   originalsDir: string,
   optimizedDir: string,
   result: AssetsOptimizeResult,
-  logger: ReturnType<typeof createLogger>,
 ): Promise<void> {
   const extension = path.extname(sourcePath).toLowerCase()
   const relativePath = path.relative(originalsDir, sourcePath)
   const relativePathWithoutExt = relativePath.replace(/\.[^.]+$/, "")
-  const outputPath = path.join(optimizedDir, relativePathWithoutExt + ".woff2")
+  const outputPath = path.join(optimizedDir, `${relativePathWithoutExt}.woff2`)
 
   parseFontFilename(path.basename(sourcePath))
 
@@ -74,7 +73,7 @@ export async function optimizeFonts(options: OptimizeFontsOptions = {}): Promise
         continue
       }
 
-      await processFontFile(sourceFile, fontOriginalsDir, fontOptimizedDir, result, logger)
+      await processFontFile(sourceFile, fontOriginalsDir, fontOptimizedDir, result)
     }
   }
 

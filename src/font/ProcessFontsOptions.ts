@@ -1,5 +1,3 @@
-import type { FontType } from "../list/AssetListTypes.js"
-
 export interface ProcessFontsOptions {
   cwd?: string
   logLevel?: 0 | 1 | 2 | 3

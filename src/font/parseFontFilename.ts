@@ -57,9 +57,7 @@ export function parseFontFilename(filename: string): {
       fontFamily = `${first} ${second}`
     }
   } else {
-    const first = parts[0] ?? ""
     let last = parts[parts.length - 1] ?? ""
-    const second = parts[1] ?? ""
 
     if (last === "Italic") {
       fontStyle = "italic"

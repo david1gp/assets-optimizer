@@ -5,6 +5,7 @@ export interface ProcessImagesOptions {
   imageOriginalsDir: string
   imageOptimizedDir: string
   hashLength?: number
+  ignoredDirNames?: readonly string[]
   result: AssetsOptimizeResult
   logger: Logger
 }

@@ -91,7 +91,15 @@ public/images/
   kitchen_7c6b5a4d.webp
 ```
 
-Files that are not inside a transform folder are ignored. Folders whose name contains `ignore` are skipped entirely.
+Files that are not inside a transform folder are ignored by design. Ignored folder names are configurable: by default, folders whose name contains `.git`, `ignore`, `discarded`, `skipped`, or `staging` are skipped entirely.
+
+Add project-specific ignored folder names with `ignoredDirNames`:
+
+```ts
+await assetsOptimize({
+  ignoredDirNames: ["archive", "drafts"],
+})
+```
 
 Only the first transform folder in a path is used. If another transform-looking folder appears below it, that nested folder is skipped with a warning.
 
@@ -153,11 +161,13 @@ generated `imageList.ts` (defaults to this package's name).
 
 ## Transform Folder Format
 
-Folder names must use:
+Folder names can use the full form:
 
 ```text
 <width>x<height>_<format>
 ```
+
+`<format>` is optional and defaults to `webp`. `<height>` is optional and defaults to `<width>`.
 
 Supported image output formats:
 
@@ -168,6 +178,9 @@ Examples:
 
 - `1920x1080_jpg`
 - `1600x900_webp`
+- `1600x900`
+- `1200_webp`
+- `1200`
 Image processing behavior:
 
 - resize fit: `inside` / max-bounds scaling

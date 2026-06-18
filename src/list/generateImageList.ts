@@ -22,11 +22,19 @@ export async function generateImageList(
   logger?: Logger,
   altTextDirectory?: string,
   hashLength = 8,
+  ignoredDirNames: readonly string[] = [],
 ): Promise<void> {
   const resolvedImageTypeImportPath = imageTypeImportPath ?? (await getOwnPackageName(import.meta.url))
   const existingImages = await loadExistingAssetList<ImageType>(outputPath, "imageList")
-  const imageAlts = altTextDirectory ? await loadImageAlts(altTextDirectory, hashLength, logger) : {}
-  const imageMap = await processImageFiles(imageDirectory, existingImages, imageAlts, hashLength, logger)
+  const imageAlts = altTextDirectory ? await loadImageAlts(altTextDirectory, hashLength, logger, ignoredDirNames) : {}
+  const imageMap = await processImageFiles(
+    imageDirectory,
+    existingImages,
+    imageAlts,
+    hashLength,
+    logger,
+    ignoredDirNames,
+  )
   const sorted = sortAssetMap(imageMap)
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
@@ -42,10 +50,11 @@ async function processImageFiles(
   imageAlts: Record<string, string>,
   hashLength: number,
   logger?: Logger,
+  ignoredDirNames: readonly string[] = [],
 ): Promise<Record<string, ImageType>> {
   const imageMap: Record<string, ImageType> = {}
 
-  for (const filePath of await walkFiles(directory)) {
+  for (const filePath of await walkFiles(directory, ignoredDirNames)) {
     const extension = path.extname(filePath).toLowerCase()
     if (!IMAGE_EXTENSIONS.has(extension)) {
       continue
@@ -82,17 +91,22 @@ async function processImageFiles(
   return imageMap
 }
 
-async function loadImageAlts(directory: string, hashLength: number, logger?: Logger): Promise<Record<string, string>> {
+async function loadImageAlts(
+  directory: string,
+  hashLength: number,
+  logger?: Logger,
+  ignoredDirNames: readonly string[] = [],
+): Promise<Record<string, string>> {
   const imageAlts: Record<string, string> = {}
 
-  for (const filePath of await collectTransformAltFiles(directory)) {
+  for (const filePath of await collectTransformAltFiles(directory, ignoredDirNames)) {
     await loadImageAlt(filePath, imageAlts, hashLength, logger)
   }
 
   return imageAlts
 }
 
-async function collectTransformAltFiles(directory: string): Promise<string[]> {
+async function collectTransformAltFiles(directory: string, ignoredDirNames: readonly string[] = []): Promise<string[]> {
   const files: string[] = []
   await collectFromDir(directory, false)
   return files.sort((a, b) => path.extname(a).localeCompare(path.extname(b)))
@@ -114,7 +128,7 @@ async function collectTransformAltFiles(directory: string): Promise<string[]> {
         continue
       }
 
-      if (isIgnoredDir(entry.name)) {
+      if (isIgnoredDir(entry.name, ignoredDirNames)) {
         continue
       }
 

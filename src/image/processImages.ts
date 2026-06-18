@@ -5,15 +5,21 @@ import { buildExpectedImages } from "./buildExpectedImages.js"
 import type { ProcessImagesOptions } from "./ProcessImagesOptions.js"
 
 export async function processImages(options: ProcessImagesOptions): Promise<void> {
-  const { hashLength, imageOptimizedDir, imageOriginalsDir, result } = options
+  const { hashLength, ignoredDirNames, imageOptimizedDir, imageOriginalsDir, result } = options
 
   await fs.mkdir(imageOriginalsDir, { recursive: true })
   await fs.mkdir(imageOptimizedDir, { recursive: true })
 
-  const expectedImages = await buildExpectedImages(imageOriginalsDir, imageOptimizedDir, result, hashLength)
+  const expectedImages = await buildExpectedImages(
+    imageOriginalsDir,
+    imageOptimizedDir,
+    result,
+    hashLength,
+    ignoredDirNames,
+  )
   const expectedFileNames = new Set(expectedImages.map((image) => image.fileName))
 
-  const localOptimizedFiles = await listLocalFiles(imageOptimizedDir)
+  const localOptimizedFiles = await listLocalFiles(imageOptimizedDir, ignoredDirNames)
   for (const localFile of localOptimizedFiles) {
     const relativeFile = path.relative(imageOptimizedDir, localFile)
     if (!expectedFileNames.has(relativeFile) && !relativeFile.startsWith(".")) {

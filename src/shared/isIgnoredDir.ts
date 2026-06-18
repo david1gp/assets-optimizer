@@ -1,7 +1,12 @@
+export const defaultIgnoredDirNames = [".git", "ignore", "discarded", "skipped", "staging"] as const
+
 /**
- * Directories whose name contains "ignore" (e.g. "ignored", "_ignore") are
- * skipped entirely during traversal and never reported as skipped/ignored.
+ * Matching directories are skipped entirely during traversal and never reported.
  */
-export function isIgnoredDir(name: string): boolean {
-  return name.toLowerCase().includes("ignore")
+export function isIgnoredDir(name: string, ignoredDirNames: readonly string[] = []): boolean {
+  const normalizedName = name.toLowerCase()
+  return [...defaultIgnoredDirNames, ...ignoredDirNames].some((ignoredName) => {
+    const normalizedIgnoredName = ignoredName.trim().toLowerCase()
+    return normalizedIgnoredName !== "" && normalizedName.includes(normalizedIgnoredName)
+  })
 }

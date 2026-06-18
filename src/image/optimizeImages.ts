@@ -31,6 +31,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
     imageOriginalsDir,
     imageOptimizedDir,
     hashLength,
+    ignoredDirNames: options.ignoredDirNames,
     result,
     logger,
   })
@@ -43,6 +44,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
       logger,
       imageOriginalsDir,
       hashLength,
+      options.ignoredDirNames,
     )
   }
 

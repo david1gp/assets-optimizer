@@ -16,6 +16,7 @@ export async function buildExpectedImages(
   optimizedDir: string,
   result: AssetsOptimizeResult,
   hashLength = 8,
+  ignoredDirNames: readonly string[] = [],
 ): Promise<ExpectedImage[]> {
   const expectedImages: ExpectedImage[] = []
 
@@ -38,7 +39,7 @@ export async function buildExpectedImages(
       }
 
       // Silently skip ignored folders so their contents are never reported.
-      if (isIgnoredDir(entry.name)) {
+      if (isIgnoredDir(entry.name, ignoredDirNames)) {
         continue
       }
 
@@ -88,7 +89,7 @@ export async function buildExpectedImages(
         continue
       }
 
-      if (isIgnoredDir(entry.name)) {
+      if (isIgnoredDir(entry.name, ignoredDirNames)) {
         continue
       }
 

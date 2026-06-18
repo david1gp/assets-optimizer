@@ -4,6 +4,7 @@ export interface OptimizeImagesOptions {
   imageOriginalsDir?: string
   imageOptimizedDir?: string
   imageHashLength?: number
+  ignoredDirNames?: readonly string[]
   imageTypeImportPath?: string
   imageListOutputPath?: string
   generateImageList?: boolean

@@ -2,22 +2,22 @@ import { isImageFormat } from "./isImageFormat.js"
 import type { TransformSpec } from "./TransformSpec.js"
 
 export function parseTransformSpec(dirName: string): TransformSpec | null {
-  const match = /^(?<width>\d+)x(?<height>\d+)_(?<format>jpg|png|webp|avif)$/.exec(dirName)
+  const match = /^(?<width>\d+)(?:(?:x|_)(?<height>\d+))?(?:_(?<format>jpg|png|webp|avif))?$/.exec(dirName)
   if (!match?.groups) {
     return null
   }
 
   const { width: widthValue, height: heightValue, format: formatValue } = match.groups
-  if (!widthValue || !heightValue || !formatValue) {
+  if (!widthValue) {
     return null
   }
 
   const width = Number.parseInt(widthValue, 10)
-  const height = Number.parseInt(heightValue, 10)
-  if (!isImageFormat(formatValue)) {
+  const height = Number.parseInt(heightValue ?? widthValue, 10)
+  const format = formatValue ?? "webp"
+  if (!isImageFormat(format)) {
     return null
   }
-  const format = formatValue
 
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     return null

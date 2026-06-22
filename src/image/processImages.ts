@@ -5,7 +5,7 @@ import { buildExpectedImages } from "./buildExpectedImages.js"
 import type { ProcessImagesOptions } from "./ProcessImagesOptions.js"
 
 export async function processImages(options: ProcessImagesOptions): Promise<void> {
-  const { hashLength, ignoredDirNames, imageOptimizedDir, imageOriginalsDir, result } = options
+  const { hashLength, ignoredDirNames, imageFilterDirs, imageOptimizedDir, imageOriginalsDir, result } = options
 
   await fs.mkdir(imageOriginalsDir, { recursive: true })
   await fs.mkdir(imageOptimizedDir, { recursive: true })
@@ -16,7 +16,16 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
     result,
     hashLength,
     ignoredDirNames,
+    imageFilterDirs,
   )
+
+  // While filtering we only built a partial expected set (just the in-scope
+  // dirs), so the stale-deletion pass would wrongly delete every untouched
+  // output. Skip it entirely — the goal is to leave all other files alone.
+  if (imageFilterDirs && imageFilterDirs.length > 0) {
+    return
+  }
+
   const expectedFileNames = new Set(expectedImages.map((image) => image.fileName))
 
   const localOptimizedFiles = await listLocalFiles(imageOptimizedDir, ignoredDirNames)

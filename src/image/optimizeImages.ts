@@ -12,6 +12,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
   const imageOptimizedDir = path.resolve(cwd, options.imageOptimizedDir ?? "public/images")
   const imageListOutputPath = path.resolve(cwd, options.imageListOutputPath ?? "src/app/assets/imageList.ts")
   const hashLength = options.imageHashLength ?? 8
+  const imageFilterDirs = (options.imageFilterDirs ?? []).map((dir) => path.resolve(cwd, dir))
   const logger = createLogger(options.logLevel)
 
   const result: AssetsOptimizeResult = {
@@ -32,6 +33,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
     imageOptimizedDir,
     hashLength,
     ignoredDirNames: options.ignoredDirNames,
+    imageFilterDirs,
     result,
     logger,
   })

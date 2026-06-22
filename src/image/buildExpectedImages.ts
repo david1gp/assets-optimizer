@@ -17,8 +17,15 @@ export async function buildExpectedImages(
   result: AssetsOptimizeResult,
   hashLength = 8,
   ignoredDirNames: readonly string[] = [],
+  filterDirs: readonly string[] = [],
 ): Promise<ExpectedImage[]> {
   const expectedImages: ExpectedImage[] = []
+
+  // When filterDirs is set we only encode source files living under one of them,
+  // leaving every other image untouched. Directory traversal stays cheap; the
+  // expensive read+hash+encode is what we skip for out-of-scope files.
+  const isInFilter = (sourceFile: string): boolean =>
+    filterDirs.length === 0 || filterDirs.some((dir) => sourceFile === dir || sourceFile.startsWith(dir + path.sep))
 
   await collectFromDir(originalsDir)
 
@@ -57,6 +64,13 @@ export async function buildExpectedImages(
 
   async function handleTransformDir(transformDir: string, transform: TransformSpec): Promise<void> {
     for (const sourceFile of await collectTransformFiles(transformDir, transformDir)) {
+      // Out-of-scope file: leave its optimized output exactly as-is (no encode,
+      // and not added to expectedImages so the deletion pass — which is itself
+      // skipped while filtering — never considers it).
+      if (!isInFilter(sourceFile)) {
+        continue
+      }
+
       const extension = path.extname(sourceFile).toLowerCase()
       if (IMAGE_ALT_EXTENSIONS.has(extension)) {
         continue

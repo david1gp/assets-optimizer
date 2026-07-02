@@ -5,7 +5,15 @@ import { buildExpectedImages } from "./buildExpectedImages.js"
 import type { ProcessImagesOptions } from "./ProcessImagesOptions.js"
 
 export async function processImages(options: ProcessImagesOptions): Promise<void> {
-  const { hashLength, ignoredDirNames, imageFilterDirs, imageOptimizedDir, imageOriginalsDir, result } = options
+  const {
+    allowRootImageFiles,
+    hashLength,
+    ignoredDirNames,
+    imageFilterDirs,
+    imageOptimizedDir,
+    imageOriginalsDir,
+    result,
+  } = options
 
   await fs.mkdir(imageOriginalsDir, { recursive: true })
   await fs.mkdir(imageOptimizedDir, { recursive: true })
@@ -17,6 +25,7 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
     hashLength,
     ignoredDirNames,
     imageFilterDirs,
+    allowRootImageFiles === true,
   )
 
   // While filtering we only built a partial expected set (just the in-scope

@@ -18,6 +18,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
   const result: AssetsOptimizeResult = {
     processed: [],
     skippedExisting: [],
+    skippedRootFiles: [],
     warnings: [],
     deletedLocal: [],
     processedFonts: [],
@@ -31,6 +32,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
   await processImages({
     imageOriginalsDir,
     imageOptimizedDir,
+    allowRootImageFiles: options.allowRootImageFiles,
     hashLength,
     ignoredDirNames: options.ignoredDirNames,
     imageFilterDirs,

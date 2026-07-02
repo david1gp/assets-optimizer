@@ -118,7 +118,12 @@ async function collectTransformAltFiles(directory: string, ignoredDirNames: read
       const entryPath = path.join(dir, entry.name)
 
       if (entry.isFile()) {
-        if (inTransform && IMAGE_ALT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+        // Alt sidecars are collected inside transform folders and at the originals
+        // root (beside loose allowRootImageFiles images); a root alt only ever binds
+        // to a key that actually made it into the optimized set, so it's inert
+        // otherwise.
+        const isAltFile = IMAGE_ALT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())
+        if (isAltFile && (inTransform || dir === directory)) {
           files.push(entryPath)
         }
         continue

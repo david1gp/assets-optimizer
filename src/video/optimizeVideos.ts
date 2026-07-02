@@ -20,6 +20,7 @@ export async function optimizeVideos(options: OptimizeVideosOptions = {}): Promi
   const result: AssetsOptimizeResult = {
     processed: [],
     skippedExisting: [],
+    skippedRootFiles: [],
     warnings: [],
     deletedLocal: [],
     processedFonts: [],

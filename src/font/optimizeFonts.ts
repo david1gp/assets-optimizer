@@ -54,6 +54,7 @@ export async function optimizeFonts(options: OptimizeFontsOptions = {}): Promise
   const result: AssetsOptimizeResult = {
     processed: [],
     skippedExisting: [],
+    skippedRootFiles: [],
     warnings: [],
     deletedLocal: [],
     processedFonts: [],

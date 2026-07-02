@@ -4,6 +4,7 @@ import type { Logger } from "./logger.js"
 export function printSummary(result: AssetsOptimizeResult, logger: Logger): void {
   logger.summary(`Processed ${result.processed.length} new optimized images`)
   logger.summary(`Skipped ${result.skippedExisting.length} existing optimized images`)
+  logger.summary(`Skipped ${result.skippedRootFiles.length} root original files`)
   logger.summary(`Deleted ${result.deletedLocal.length} stale local optimized images`)
   logger.summary(`Processed ${result.processedFonts.length} new optimized fonts`)
   logger.summary(`Skipped ${result.skippedExistingFonts.length} existing optimized fonts`)

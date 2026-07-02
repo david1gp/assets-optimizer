@@ -283,17 +283,22 @@ That means:
 3. Regenerate your typed image list
 4. Reference the generated hashed filenames from app code or derived metadata
 
-## Important Caveat
+## Root image files
 
-If your project currently stores source images directly at the root of `images`, this package will skip them by design.
-
-Before adopting it fully, move originals below explicit transform folders such as:
+By default this package skips source images sitting directly at the root of `images`, so
+only files below explicit transform folders are processed:
 
 ```text
 images/1920x1080_jpg/
 ```
 
 That contract is what makes the output deterministic and safe to clean automatically.
+
+If you'd rather drop loose images at the root (e.g. one-off screenshots or placeholders),
+set `allowRootImageFiles: true`. Each root file is then optimized once at its **native
+dimensions** with the output format derived from its extension — no resizing, no transform
+folder required. A root file's alt sidecar (`<name>.md` / `<name>.txt`) placed beside it is
+picked up too. Transform folders and root files can coexist in the same `images` tree.
 
 ## License
 

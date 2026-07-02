@@ -3,6 +3,7 @@ import path from "node:path"
 import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
 import { isIgnoredDir } from "../shared/isIgnoredDir.js"
 import { createOutputHash } from "./createOutputHash.js"
+import { createRootImageTransform } from "./createRootImageTransform.js"
 import { type ExpectedImage } from "./ExpectedImage.js"
 import { parseTransformSpec } from "./parseTransformSpec.js"
 import { processImage } from "./processImage.js"
@@ -18,6 +19,7 @@ export async function buildExpectedImages(
   hashLength = 8,
   ignoredDirNames: readonly string[] = [],
   filterDirs: readonly string[] = [],
+  allowRootImageFiles = false,
 ): Promise<ExpectedImage[]> {
   const expectedImages: ExpectedImage[] = []
 
@@ -38,6 +40,11 @@ export async function buildExpectedImages(
       const entryPath = path.join(dir, entry.name)
 
       if (entry.isFile()) {
+        // Loose files only carry a transform at the originals root (opt-in);
+        // inside grouping dirs they're always skipped, as before.
+        if (dir === originalsDir) {
+          await handleRootFile(entryPath, entry.name)
+        }
         continue
       }
 
@@ -85,6 +92,43 @@ export async function buildExpectedImages(
       const sourceBuffer = await fs.readFile(sourceFile)
       await emitImage(sourceBuffer, sourceFile, transform)
     }
+  }
+
+  async function handleRootFile(entryPath: string, name: string): Promise<void> {
+    const extension = path.extname(name).toLowerCase()
+
+    // Alt sidecars are consumed by the image-list generator, not encoded here.
+    if (IMAGE_ALT_EXTENSIONS.has(extension)) {
+      return
+    }
+
+    if (!allowRootImageFiles) {
+      result.skippedRootFiles.push(name)
+      result.warnings.push(`Skipped root original file (allowRootImageFiles is off): ${name}`)
+      console.warn(`Skipped root original file (allowRootImageFiles is off): ${name}`)
+      return
+    }
+
+    // Respect filter scoping: an out-of-scope root file is left exactly as-is.
+    if (!isInFilter(entryPath)) {
+      return
+    }
+
+    if (!supportedSourceExtensions.has(extension)) {
+      result.warnings.push(`Skipped unsupported root source file: ${name}`)
+      console.warn(`Skipped unsupported root source file: ${name}`)
+      return
+    }
+
+    const sourceBuffer = await fs.readFile(entryPath)
+    const transform = createRootImageTransform(entryPath, sourceBuffer)
+    if (!transform) {
+      result.warnings.push(`Skipped root source file with unsupported output format: ${name}`)
+      console.warn(`Skipped root source file with unsupported output format: ${name}`)
+      return
+    }
+
+    await emitImage(sourceBuffer, entryPath, transform)
   }
 
   async function collectTransformFiles(dir: string, transformDir: string): Promise<string[]> {

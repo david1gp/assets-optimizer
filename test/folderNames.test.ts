@@ -52,7 +52,12 @@ describe("transform folder names", () => {
     ["512x256", 512, 256, "webp", "512x256_webp"],
     ["512_256_webp", 512, 256, "webp", "512x256_webp"],
   ] as const)("matches %s", (name, width, height, format, normalized) => {
-    expect(parseTransformSpec(name)).toEqual({ width, height, format, normalized })
+    expect(parseTransformSpec(name)).toEqual({
+      width,
+      height,
+      format,
+      normalized,
+    })
   })
 
   test.each([

@@ -9,7 +9,12 @@ import { optimizeImages } from "../src/image/optimizeImages.js"
 async function writePng(filePath: string, shade: number): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true })
   const buffer = await sharp({
-    create: { width: 8, height: 8, channels: 3, background: { r: shade, g: shade, b: shade } },
+    create: {
+      width: 8,
+      height: 8,
+      channels: 3,
+      background: { r: shade, g: shade, b: shade },
+    },
   })
     .png()
     .toBuffer()

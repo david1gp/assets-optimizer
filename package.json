@@ -8,7 +8,7 @@
     "ttf2woff2": "^8.0.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.11",
+    "@biomejs/biome": "^2.5.2",
     "@types/bun": "latest",
     "@types/node": "^25.6.0",
     "typescript": "^6.0.2"
@@ -49,7 +49,7 @@
   },
   "scripts": {
     "build": "rm -rf ./dist && bun tsc -p ./tsconfig.lib.json",
-    "format": "bunx biome check --write src test",
+    "format": "biome format --write src test package.json tsconfig.json tsconfig.lib.json biome.json",
     "test": "bun test",
     "release": "bash ops/release.sh"
   },

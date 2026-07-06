@@ -9,9 +9,7 @@
     //
     // dom
     //
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext"],
     "types": ["bun"],
     //
     // performance
@@ -48,11 +46,7 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "client",
-    "src",
-    "test"
-  ],
+  "include": ["client", "src", "test"],
   "exclude": [
     ".github",
     ".roo",
@@ -72,5 +66,5 @@
     "public/images",
     "videos",
     "public/videos"
-  ],
+  ]
 }

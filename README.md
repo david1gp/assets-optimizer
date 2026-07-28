@@ -253,7 +253,7 @@ This package is built for a workflow with two local directories:
 ## Requirements
 
 - `bun`
-- `rclone`
+- `rclone` >= 1.66 (for `bisync --create-empty-src-dirs`; distro packages like Debian 1.60.x are too old — install from https://rclone.org/install/)
 - `ffmpeg`
 - an existing `rclone` remote
 - write access to the target bucket/path

@@ -300,6 +300,63 @@ dimensions** with the output format derived from its extension — no resizing, 
 folder required. A root file's alt sidecar (`<name>.md` / `<name>.txt`) placed beside it is
 picked up too. Transform folders and root files can coexist in the same `images` tree.
 
+## AI Image Labels
+
+Images identified as AI-generated or AI-modified can automatically receive a visible watermark label during optimization to support EU AI Act labeling workflows. This feature helps incorporate AI disclosure labels into processed image assets; it does not present legal advice or guarantee regulatory compliance.
+
+### Detection & Precedence
+
+Classification is determined automatically by checking folder names, file names, or explicit transform folder suffixes:
+
+- **Filename detection**: Source file names containing an AI pattern as a substring anywhere in the filename (e.g. `hero_Ai_generated.png`, `chart-ai-modified.jpg`).
+- **Directory detection**: In-tree directory names inside the `images/` source tree containing an AI pattern as a substring anywhere in the folder name (e.g. `images/AI generated/1920x1080_jpg/`). Detection applies recursively to all images within that directory and its subdirectories; external parent directories outside the source tree are ignored.
+- **Accepted case, delimiter, and following-character forms**: The classification pattern is matched as a substring starting with `AI`, `Ai`, or `ai`, followed by a delimiter (` `, `.`, `_`, or `-`), and ending with `generated` or `modified` (e.g. `AI generated`, `Ai_modified`, `ai-generated`, `AI.modified`). The trailing `generated` or `modified` must occur at the end of the name or be followed by a non-letter character (e.g. `ai_generated_2.png` matches, but `ai-generatedness` does not).
+- **Transform folder suffix**: Transform folders can specify an explicit classification suffix: `<width>x<height>_<format>_ai_<classification>` or `<width>x<height>_ai_<classification>` (e.g. `1920x1080_jpg_ai_generated`, `1200_webp_ai_modified`, or `1200_ai_generated`).
+
+Precedence (highest to lowest):
+1. Transform folder suffix (`_ai_generated` / `_ai_modified`)
+2. Source filename detection
+3. Parent directory detection (closest parent folder priority)
+
+### Configuration Options
+
+Configure label rendering via `aiLabelOptions` on `assetsOptimize()`:
+
+```ts
+await assetsOptimize({
+  aiLabelOptions: {
+    mode: "adaptive",
+    simpleColor: "black",
+    visual: "padding",
+    opacity: "opaque",
+    placement: "bottom-right",
+    height: 50,
+    offsetX: 0,
+    offsetY: 0,
+  },
+})
+```
+
+Supported options (`AiLabelOptions`):
+
+- **`mode`** (`"simple"` | `"adaptive"`, default `"simple"`): Selects color logic.
+  - `"simple"` uses the fixed `simpleColor`.
+  - `"adaptive"` analyzes pixels under the target region using linear relative luminance with alpha weighting to choose whichever color (`"black"` or `"white"`) has lower luminance contrast against the background so the label is less conspicuous. Ties or invisible regions default to `"black"`.
+- **`simpleColor`** (`"black"` | `"white"`, default `"black"`): Label color used in simple mode.
+- **`visual`** (`"padding"` | `"circle"`, default `"padding"`): Visual layout variant (padded badge or circular icon).
+- **`opacity`** (`"opaque"` | `"50%"`, default `"opaque"`): Opacity variant (100% fill or 50% transparency).
+- **`placement`** (`"top-left"` | `"top-right"` | `"bottom-left"` | `"bottom-right"`, default `"bottom-right"`): Target corner placement.
+- **`height`** (`number`, default `50`): Target label height in pixels.
+- **`offsetX`** / **`offsetY`** (`number`, default `0`): Horizontal/vertical offsets in pixels. Positive values inset the label away from the corner into the image interior; negative values shift toward the boundary and clamp to image edges.
+
+### Geometry & Small Images
+
+Label scaling preserves the SVG aspect ratio based on the target `height`. If an image is smaller than the requested label dimensions, the label automatically scales down to fit within the image bounds without distortion or overflow. Label positioning and dimensions are clamped to stay entirely within the target image bounds.
+
+### Asset Packaging
+
+The 12 physical pre-rendered vector SVG label assets (mapping to 16 classification/color/visual/opacity option combinations, with circular visual assets shared across classifications) are stored in `public/ai/` and included in NPM package distributions alongside `dist/` (`files: ["dist", "public"]`). Label SVGs are loaded using module-relative resolution (`import.meta.url`), ensuring compatibility across package deployments.
+
 ## License
 
 MIT

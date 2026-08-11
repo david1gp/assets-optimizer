@@ -30,6 +30,7 @@ Extend the asset optimizer so images identified as AI-generated or AI-modified r
 15. **Complete** — Add classified JPG, WebP, and AVIF output coverage.
 16. **Complete** — Correct final documentation details and clarify substring detection semantics.
 17. **Complete** — Run final verification and release-readiness review.
+18. **Complete** — Format, split the feature into semantic commits, and push.
 
 ## Active paths
 

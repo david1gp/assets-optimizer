@@ -36,6 +36,7 @@ export async function optimizeImages(options: OptimizeImagesOptions = {}): Promi
     hashLength,
     ignoredDirNames: options.ignoredDirNames,
     imageFilterDirs,
+    aiLabelOptions: options.aiLabelOptions,
     result,
     logger,
   })

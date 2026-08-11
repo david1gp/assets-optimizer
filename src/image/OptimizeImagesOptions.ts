@@ -1,3 +1,5 @@
+import type { AiLabelOptions } from "./AiLabelOptions.js"
+
 export interface OptimizeImagesOptions {
   cwd?: string
   logLevel?: 0 | 1 | 2 | 3
@@ -13,6 +15,7 @@ export interface OptimizeImagesOptions {
   // leaving all other optimized files untouched. The image list still scans the
   // full optimized dir, so it stays complete.
   imageFilterDirs?: readonly string[]
+  aiLabelOptions?: AiLabelOptions
   imageTypeImportPath?: string
   imageListOutputPath?: string
   generateImageList?: boolean

@@ -2,6 +2,9 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
 import { isIgnoredDir } from "../shared/isIgnoredDir.js"
+import type { AiLabelOptions } from "./AiLabelOptions.js"
+import { aiClassificationDetect } from "./aiClassificationDetect.js"
+import { aiLabelOptionsResolve } from "./aiLabelOptionsResolve.js"
 import { createOutputHash } from "./createOutputHash.js"
 import { createRootImageTransform } from "./createRootImageTransform.js"
 import type { ExpectedImage } from "./ExpectedImage.js"
@@ -20,8 +23,10 @@ export async function buildExpectedImages(
   ignoredDirNames: readonly string[] = [],
   filterDirs: readonly string[] = [],
   allowRootImageFiles = false,
+  aiLabelOptions: AiLabelOptions = {},
 ): Promise<ExpectedImage[]> {
   const expectedImages: ExpectedImage[] = []
+  const resolvedAiLabelOptions = aiLabelOptionsResolve(aiLabelOptions)
 
   // When filterDirs is set we only encode source files living under one of them,
   // leaving every other image untouched. Directory traversal stays cheap; the
@@ -173,21 +178,33 @@ export async function buildExpectedImages(
       return
     }
 
-    const hash = createOutputHash(sourceBuffer, transform.normalized, hashLength)
     const baseName = path.parse(sourceFile).name
+    const aiClassification = transform.aiClassification ?? aiClassificationDetect(sourceFile, originalsDir)
+    const outputIdentity = aiClassification
+      ? JSON.stringify({
+          transform: transform.normalized,
+          aiClassification,
+          aiLabelOptions: resolvedAiLabelOptions,
+        })
+      : transform.normalized
+    const hash = createOutputHash(sourceBuffer, outputIdentity, hashLength)
     const fileName = `${baseName}_${hash}.${transform.format}`
     const outputPath = path.join(optimizedDir, fileName)
 
     expectedImages.push({
       fileName,
       localPath: outputPath,
+      ...(aiClassification ? { aiClassification } : {}),
     })
 
     try {
       await fs.access(outputPath)
       result.skippedExisting.push(fileName)
     } catch {
-      await processImage(sourceBuffer, outputPath, transform)
+      await processImage(sourceBuffer, outputPath, transform, undefined, {
+        aiClassification: aiClassification ?? undefined,
+        aiLabelOptions: resolvedAiLabelOptions,
+      })
       result.processed.push(fileName)
     }
   }

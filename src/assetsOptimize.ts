@@ -16,6 +16,7 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
           imageHashLength: options.imageHashLength,
           ignoredDirNames: options.ignoredDirNames,
           imageFilterDirs: options.imageFilterDirs,
+          aiLabelOptions: options.aiLabelOptions,
           imageTypeImportPath: options.imageTypeImportPath,
           imageListOutputPath: options.imageListOutputPath,
           generateImageList: options.generateImageList,

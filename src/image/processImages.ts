@@ -12,6 +12,7 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
     imageFilterDirs,
     imageOptimizedDir,
     imageOriginalsDir,
+    aiLabelOptions,
     result,
   } = options
 
@@ -26,6 +27,7 @@ export async function processImages(options: ProcessImagesOptions): Promise<void
     ignoredDirNames,
     imageFilterDirs,
     allowRootImageFiles === true,
+    aiLabelOptions,
   )
 
   // While filtering we only built a partial expected set (just the in-scope

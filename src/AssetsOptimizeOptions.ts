@@ -1,3 +1,5 @@
+import type { AiLabelOptions } from "./image/AiLabelOptions.js"
+
 export interface AssetsOptimizeOptions {
   cwd?: string
   logLevel?: 0 | 1 | 2 | 3
@@ -16,6 +18,7 @@ export interface AssetsOptimizeOptions {
   // is skipped; the generated image list still scans the full optimized dir so
   // it stays complete. Empty/undefined processes everything (default).
   imageFilterDirs?: readonly string[]
+  aiLabelOptions?: AiLabelOptions
   imageTypeImportPath?: string
   imageListOutputPath?: string
   generateImageList?: boolean

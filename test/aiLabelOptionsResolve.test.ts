@@ -9,7 +9,7 @@ describe("AI label options", () => {
       visual: "padding",
       opacity: "opaque",
       placement: "bottom-right",
-      height: 50,
+      height: 32,
       offsetX: 0,
       offsetY: 0,
     })

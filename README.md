@@ -330,7 +330,7 @@ await assetsOptimize({
     visual: "padding",
     opacity: "opaque",
     placement: "bottom-right",
-    height: 50,
+    height: 32,
     offsetX: 0,
     offsetY: 0,
   },
@@ -346,7 +346,7 @@ Supported options (`AiLabelOptions`):
 - **`visual`** (`"padding"` | `"circle"`, default `"padding"`): Visual layout variant (padded badge or circular icon).
 - **`opacity`** (`"opaque"` | `"50%"`, default `"opaque"`): Opacity variant (100% fill or 50% transparency).
 - **`placement`** (`"top-left"` | `"top-right"` | `"bottom-left"` | `"bottom-right"`, default `"bottom-right"`): Target corner placement.
-- **`height`** (`number`, default `50`): Target label height in pixels.
+- **`height`** (`number`, default `32`): Target label height in pixels.
 - **`offsetX`** / **`offsetY`** (`number`, default `0`): Horizontal/vertical offsets in pixels. Positive values inset the label away from the corner into the image interior; negative values shift toward the boundary and clamp to image edges.
 
 ### Geometry & Small Images

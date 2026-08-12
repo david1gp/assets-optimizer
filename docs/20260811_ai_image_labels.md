@@ -48,13 +48,13 @@ Extend the asset optimizer so images identified as AI-generated or AI-modified r
 - Detection is case-limited to `AI`, `Ai`, or `ai`, followed by whitespace, `-`, `_`, or `.`, then `generated` or `modified`.
 - A matching directory marks all files beneath it.
 - Transformation names support an optional `_ai_generated` or `_ai_modified` ending after the existing format segment.
-- Label defaults: bottom-right, 50 px high.
+- Label defaults: bottom-right, 32 px high.
 - Simple mode selects a configured black or white label; adaptive mode samples the destination region and chooses whichever is less conspicuous.
 - Supplied visual variants are filled/opaque and 50% transparent.
 - Classification from an explicit transformation suffix overrides source-path classification; filename classification overrides directory classification.
 - Adaptive mode chooses the label color with the lower luminance contrast against the pixels under its final target region.
 - Labels are composited after resizing and before output format encoding.
-- Configuration defaults are simple mode, black, padding visual, opaque, bottom-right, 50 px high, and zero x/y offsets.
+- Configuration defaults are simple mode, black, padding visual, opaque, bottom-right, 32 px high, and zero x/y offsets.
 - Configurable visuals are `padding` or `circle`; configurable opacity is `opaque` or `50%`.
 - All 16 classification/color/visual/opacity combinations map explicitly to supplied assets; circle assets are shared across classifications.
 - SVGs resolve relative to the built module, and package contents include both `dist/` and `public/`.

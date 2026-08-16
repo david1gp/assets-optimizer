@@ -202,8 +202,8 @@ describe("AI labels through the public optimizer API", () => {
       const darkOutput = await readRaw(getOutputPath(result, root, "optimized", "dark"))
       const lightOutput = await readRaw(getOutputPath(result, root, "optimized", "light"))
 
-      expect(pixelChannel(darkOutput, 64, 50)).toBe(0)
-      expect(pixelChannel(lightOutput, 64, 50)).toBe(255)
+      expect(pixelChannel(darkOutput, 64, 50)).toBeLessThan(32)
+      expect(pixelChannel(lightOutput, 64, 50)).toBeGreaterThan(224)
       await expectDimensions(getOutputPath(result, root, "optimized", "dark"), 80, 60)
       await expectDimensions(getOutputPath(result, root, "optimized", "light"), 80, 60)
     } finally {

@@ -203,20 +203,32 @@ Supported video source extensions:
 bun add -D @adaptive-ds/assets-optimizer
 ```
 
-## Basic Usage
+## Library usage
 
-Example project entrypoint:
+Use `assetsOptimize()` when the optimizer is part of a project build:
 
 ```ts
-import { assetsProcess } from "@adaptive-ds/assets-optimizer"
+import { assetsOptimize } from "@adaptive-ds/assets-optimizer"
 
-await assetsProcess()
+await assetsOptimize()
 ```
 
 This generates optimized images, processed videos, hashed webp video previews, `imageList.ts`, and `videoList.ts` in one run. 
 
 Existing image alt text and existing video preview alt text are preserved when the generated files already exist.
 Image alt text can also be provided with a same-basename `.txt` or `.md` file next to the source image inside a transform folder. If both exist, `.txt` is used and `.md` is the fallback.
+
+## CLI usage
+
+After installing the package, pass options as typed kebab-case flags:
+
+```bash
+assets-optimizer optimize --no-process-images --no-process-videos --no-process-fonts
+```
+
+String arrays accept repeated flags, for example `--ignored-dir-names cache --ignored-dir-names tmp`. AI label settings use flattened flags such as `--ai-label-mode adaptive` and `--ai-label-placement bottom-right`. Run `assets-optimizer optimize --help` for the full list.
+
+The CLI writes one JSON object to stdout. Successful runs use `{ "success": true, "data": ... }`; failures use `{ "success": false, "error": ... }` and exit with status 1. Requested logs are captured in an optional `diagnostics` field instead of being written as separate lines. Stderr stays empty.
 
 ## Local folders
 

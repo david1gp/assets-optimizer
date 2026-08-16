@@ -1,25 +1,28 @@
 import type { AssetsOptimizeOptions } from "./AssetsOptimizeOptions.js"
 import type { AssetsOptimizeResult } from "./AssetsOptimizeResult.js"
+import { assetsOptimizeOptionsValidate } from "./assetsOptimizeOptionsValidate.js"
 import { optimizeFonts } from "./font/optimizeFonts.js"
 import { optimizeImages } from "./image/optimizeImages.js"
 import { optimizeVideos } from "./video/optimizeVideos.js"
 
 export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promise<AssetsOptimizeResult> {
+  const validatedOptions = assetsOptimizeOptionsValidate(options)
+
   const [imageResult, videoResult, fontResult] = await Promise.all([
-    options.processImages !== false
+    validatedOptions.processImages !== false
       ? optimizeImages({
-          cwd: options.cwd,
-          logLevel: options.logLevel,
-          imageOriginalsDir: options.imageOriginalsDir,
-          imageOptimizedDir: options.imageOptimizedDir,
-          allowRootImageFiles: options.allowRootImageFiles,
-          imageHashLength: options.imageHashLength,
-          ignoredDirNames: options.ignoredDirNames,
-          imageFilterDirs: options.imageFilterDirs,
-          aiLabelOptions: options.aiLabelOptions,
-          imageTypeImportPath: options.imageTypeImportPath,
-          imageListOutputPath: options.imageListOutputPath,
-          generateImageList: options.generateImageList,
+          cwd: validatedOptions.cwd,
+          logLevel: validatedOptions.logLevel,
+          imageOriginalsDir: validatedOptions.imageOriginalsDir,
+          imageOptimizedDir: validatedOptions.imageOptimizedDir,
+          allowRootImageFiles: validatedOptions.allowRootImageFiles,
+          imageHashLength: validatedOptions.imageHashLength,
+          ignoredDirNames: validatedOptions.ignoredDirNames,
+          imageFilterDirs: validatedOptions.imageFilterDirs,
+          aiLabelOptions: validatedOptions.aiLabelOptions,
+          imageTypeImportPath: validatedOptions.imageTypeImportPath,
+          imageListOutputPath: validatedOptions.imageListOutputPath,
+          generateImageList: validatedOptions.generateImageList,
         })
       : Promise.resolve({
           processed: [],
@@ -34,16 +37,16 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
           processedVideoPreviews: [],
           skippedExistingVideoPreviews: [],
         }),
-    options.processVideos !== false
+    validatedOptions.processVideos !== false
       ? optimizeVideos({
-          cwd: options.cwd,
-          logLevel: options.logLevel,
-          videoOriginalsDir: options.videoOriginalsDir,
-          videoOptimizedDir: options.videoOptimizedDir,
-          videoListOutputPath: options.videoListOutputPath,
-          generateVideoList: options.generateVideoList,
-          videoPreviewQuality: options.videoPreviewQuality,
-          videoPreviewHashLength: options.videoPreviewHashLength,
+          cwd: validatedOptions.cwd,
+          logLevel: validatedOptions.logLevel,
+          videoOriginalsDir: validatedOptions.videoOriginalsDir,
+          videoOptimizedDir: validatedOptions.videoOptimizedDir,
+          videoListOutputPath: validatedOptions.videoListOutputPath,
+          generateVideoList: validatedOptions.generateVideoList,
+          videoPreviewQuality: validatedOptions.videoPreviewQuality,
+          videoPreviewHashLength: validatedOptions.videoPreviewHashLength,
         })
       : Promise.resolve({
           processed: [],
@@ -58,14 +61,14 @@ export async function assetsOptimize(options: AssetsOptimizeOptions = {}): Promi
           processedVideoPreviews: [],
           skippedExistingVideoPreviews: [],
         }),
-    options.processFonts !== false
+    validatedOptions.processFonts !== false
       ? optimizeFonts({
-          cwd: options.cwd,
-          logLevel: options.logLevel,
-          fontOriginalsDir: options.fontOriginalsDir,
-          fontOptimizedDir: options.fontOptimizedDir,
-          fontListOutputPath: options.fontListOutputPath,
-          generateFontList: options.generateFontList,
+          cwd: validatedOptions.cwd,
+          logLevel: validatedOptions.logLevel,
+          fontOriginalsDir: validatedOptions.fontOriginalsDir,
+          fontOptimizedDir: validatedOptions.fontOptimizedDir,
+          fontListOutputPath: validatedOptions.fontListOutputPath,
+          generateFontList: validatedOptions.generateFontList,
         })
       : Promise.resolve({
           processed: [],

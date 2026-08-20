@@ -1,4 +1,5 @@
 import { buildApplication, buildRouteMap } from "@stricli/core"
+import { packageVersion } from "../packageVersion.js"
 import { optimizeCommand } from "./optimizeCommand.js"
 
 const assetsOptimizerRoutes = buildRouteMap({
@@ -17,5 +18,8 @@ export const assetsOptimizerApplication = buildApplication(assetsOptimizerRoutes
   },
   documentation: {
     caseStyle: "convert-camel-to-kebab",
+  },
+  versionInfo: {
+    currentVersion: packageVersion,
   },
 })

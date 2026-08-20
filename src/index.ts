@@ -1,6 +1,7 @@
 export * from "./AssetsOptimizeOptions.js"
 export * from "./AssetsOptimizeResult.js"
 export * from "./assetsOptimize.js"
+export * from "./packageVersion.js"
 export * from "./font/OptimizeFontsOptions.js"
 export * from "./font/optimizeFonts.js"
 export * from "./font/ProcessFontsOptions.js"

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import path from "node:path"
+import pkg from "../package.json" with { type: "json" }
 import { assetsOptimize, optimizeImages, processAssets } from "../src/index.js"
 
 const cliPath = path.resolve(import.meta.dir, "../src/cli/assetsOptimizerCli.ts")
@@ -22,6 +23,35 @@ type CliPayload = Record<string, unknown> & {
 }
 
 describe("assets-optimizer CLI", () => {
+  test("preserves plain version output", async () => {
+    const flagResult = await runCli("--version")
+    const commandResult = await runCli("version")
+
+    expect(flagResult.exitCode).toBe(0)
+    expect(commandResult.exitCode).toBe(0)
+    expect((readPayload(flagResult).data as { readonly help: string }).help).toBe(pkg.version)
+    expect((readPayload(commandResult).data as { readonly help: string }).help).toBe(pkg.version)
+  })
+
+  test("reports package and environment metadata in verbose version output", async () => {
+    const result = await runCli("version", "--verbose")
+
+    expect(result.exitCode).toBe(0)
+    const help = (readPayload(result).data as { readonly help: string }).help
+    expect(help).toContain(`user agent: ${pkg.name}/${pkg.version}`)
+    expect(help).toContain(`version: ${pkg.version}`)
+    expect(help).toContain(`description: ${pkg.description}`)
+    expect(help).toContain("author: unavailable")
+    expect(help).toContain(`license: ${pkg.license}`)
+    expect(help).toContain(`project: ${pkg.homepage}`)
+    expect(help).toContain("installation type: development checkout")
+    expect(help).toContain("runtime: bun ")
+    expect(help).toContain("runtime requirements: unavailable")
+    expect(help).toContain(`platform: ${process.platform} ${process.arch} (OS release `)
+    expect(help).toMatch(/executable: .+\nexecutable target: .+\n/)
+    expect(help).not.toContain("build details:")
+  })
+
   test("reports help as a successful JSON result", async () => {
     const result = await runCli("optimize", "--help")
 

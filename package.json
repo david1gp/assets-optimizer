@@ -17,7 +17,7 @@
     "public"
   ],
   "devDependencies": {
-    "@biomejs/biome": "^2.5.2",
+    "@biomejs/biome": "^2.6.4",
     "@types/bun": "latest",
     "@types/node": "^25.6.0",
     "typescript": "^6.0.2"

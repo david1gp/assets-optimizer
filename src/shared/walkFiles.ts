@@ -1,5 +1,6 @@
 import fs from "node:fs/promises"
 import path from "node:path"
+import { isConflictFile } from "./isConflictFile.js"
 import { isIgnoredDir } from "./isIgnoredDir.js"
 
 export async function walkFiles(dir: string, ignoredDirNames: readonly string[] = []): Promise<string[]> {
@@ -16,7 +17,7 @@ export async function walkFiles(dir: string, ignoredDirNames: readonly string[] 
       continue
     }
 
-    if (entry.isFile()) {
+    if (entry.isFile() && !isConflictFile(entry.name)) {
       files.push(fullPath)
     }
   }

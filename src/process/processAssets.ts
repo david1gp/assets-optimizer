@@ -1,8 +1,8 @@
 import { assetsOptimize } from "../assetsOptimize.js"
-import { bisync } from "../rclone/bisync.js"
 import { runRclone } from "../rclone/runRclone.js"
+import { runRcloneCapture } from "../rclone/runRcloneCapture.js"
+import { syncOriginals } from "../sync/syncOriginals.js"
 import type { ProcessAssetsOptions } from "./ProcessAssetsOptions.js"
-import { shouldBisync } from "./utils/shouldBisync.js"
 
 export async function processAssets(options: ProcessAssetsOptions): Promise<void> {
   const {
@@ -13,7 +13,7 @@ export async function processAssets(options: ProcessAssetsOptions): Promise<void
     destVideosRemotePath,
     destFontsRemotePath,
     cwd = process.cwd(),
-    resync = false,
+    resync: _resync,
     processImages = true,
     processVideos = true,
     processFonts = true,
@@ -47,29 +47,13 @@ export async function processAssets(options: ProcessAssetsOptions): Promise<void
   const destVideos = destVideosRemotePath
   const destFonts = destFontsRemotePath
 
-  const syncImages = processImages ? await shouldBisync(imageOriginalsDir, sourceImages) : false
-  const syncVideos = processVideos ? await shouldBisync(videoOriginalsDir, sourceVideos) : false
-  const syncFonts = processFonts ? await shouldBisync(fontOriginalsDir, sourceFonts) : false
+  if (processImages) await syncOriginals({ localDir: imageOriginalsDir, remotePath: sourceImages, cwd, logLevel })
+  if (processVideos) await syncOriginals({ localDir: videoOriginalsDir, remotePath: sourceVideos, cwd, logLevel })
+  if (processFonts) await syncOriginals({ localDir: fontOriginalsDir, remotePath: sourceFonts, cwd, logLevel })
 
-  if (!syncImages && !syncVideos && !syncFonts) {
-    if ((logLevel ?? 3) >= 2) console.log("No sync needed (local and remote both empty)")
-    return
-  }
-
-  if (syncImages) {
-    if ((logLevel ?? 3) >= 2) console.log(`Syncing images: ${imageOriginalsDir} <-> ${sourceImages}`)
-    await bisync(imageOriginalsDir, sourceImages, { cwd, resync })
-  }
-
-  if (syncVideos) {
-    if ((logLevel ?? 3) >= 2) console.log(`Syncing videos: ${videoOriginalsDir} <-> ${sourceVideos}`)
-    await bisync(videoOriginalsDir, sourceVideos, { cwd, resync })
-  }
-
-  if (syncFonts) {
-    if ((logLevel ?? 3) >= 2) console.log(`Syncing fonts: ${fontOriginalsDir} <-> ${sourceFonts}`)
-    await bisync(fontOriginalsDir, sourceFonts, { cwd, resync })
-  }
+  if (processImages) await pullOutputs(destImages, imageOptimizedDir, cwd)
+  if (processVideos) await pullOutputs(destVideos, videoOptimizedDir, cwd)
+  if (processFonts) await pullOutputs(destFonts, fontOptimizedDir, cwd)
 
   if (assetsOptimizeLocallyFn) {
     if ((logLevel ?? 3) >= 2) console.log("Running custom assetsOptimizeLocallyFn")
@@ -95,12 +79,12 @@ export async function processAssets(options: ProcessAssetsOptions): Promise<void
     })
   }
 
-  if (syncImages) {
+  if (processImages) {
     if ((logLevel ?? 3) >= 2) console.log(`Uploading optimized images: ${imageOptimizedDir} -> ${destImages}`)
     await runRclone(["sync", imageOptimizedDir, destImages, "--header-upload", imageCacheControl], cwd)
   }
 
-  if (syncVideos) {
+  if (processVideos) {
     if ((logLevel ?? 3) >= 2) console.log(`Uploading optimized videos: ${videoOptimizedDir} -> ${destVideos}`)
     // Videos keep stable, unhashed filenames (optimized by hand), so they get a short cache.
     // Their hashed preview images are excluded here and uploaded separately with a long cache.
@@ -115,8 +99,17 @@ export async function processAssets(options: ProcessAssetsOptions): Promise<void
     )
   }
 
-  if (syncFonts) {
+  if (processFonts) {
     if ((logLevel ?? 3) >= 2) console.log(`Uploading optimized fonts: ${fontOptimizedDir} -> ${destFonts}`)
     await runRclone(["sync", fontOptimizedDir, destFonts, "--header-upload", fontCacheControl], cwd)
   }
+}
+
+async function pullOutputs(remote: string, localDir: string, cwd: string): Promise<void> {
+  const result = await runRcloneCapture(["lsjson", remote, "--max-depth", "1"], cwd)
+  if (result.exitCode !== 0) {
+    if (result.exitCode === 3 && (!result.stdout.trim() || /^\[\s*\]?$/.test(result.stdout.trim()))) return
+    throw new Error(`rclone lsjson failed (${result.exitCode}): ${result.stderr}`)
+  }
+  await runRclone(["copy", remote, localDir, "--update"], cwd)
 }

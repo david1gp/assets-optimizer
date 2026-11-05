@@ -8,6 +8,7 @@ export interface ProcessAssetsOptions extends AssetsOptimizeOptions {
   destVideosRemotePath: string
   destFontsRemotePath: string
   cwd?: string
+  /** @deprecated no-op, sync no longer needs resync */
   resync?: boolean
   processImages?: boolean
   processVideos?: boolean

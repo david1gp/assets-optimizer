@@ -1,4 +1,4 @@
-export const defaultIgnoredDirNames = [".git", "ignore", "discarded", "skipped", "staging"] as const
+export const defaultIgnoredDirNames = [".assets-sync", ".git", "ignore", "discarded", "skipped", "staging"] as const
 
 /**
  * Matching directories are skipped entirely during traversal and never reported.

@@ -1,6 +1,7 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import type { AssetsOptimizeResult } from "../AssetsOptimizeResult.js"
+import { isConflictFile } from "../shared/isConflictFile.js"
 import { isIgnoredDir } from "../shared/isIgnoredDir.js"
 import type { AiLabelOptions } from "./AiLabelOptions.js"
 import { aiClassificationDetect } from "./aiClassificationDetect.js"
@@ -43,6 +44,8 @@ export async function buildExpectedImages(
 
     for (const entry of dirEntries) {
       const entryPath = path.join(dir, entry.name)
+
+      if (entry.isFile() && isConflictFile(entry.name)) continue
 
       if (entry.isFile()) {
         // Loose files only carry a transform at the originals root (opt-in);
@@ -142,6 +145,8 @@ export async function buildExpectedImages(
 
     for (const entry of dirEntries) {
       const entryPath = path.join(dir, entry.name)
+
+      if (entry.isFile() && isConflictFile(entry.name)) continue
 
       if (entry.isFile()) {
         files.push(entryPath)

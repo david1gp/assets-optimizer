@@ -33,8 +33,7 @@ function isAtLeast(actual: [number, number, number], minimum: [number, number, n
 }
 
 /**
- * Bisync --create-empty-src-dirs requires rclone >= 1.66.
- * Older distro packages (e.g. Debian's 1.60.1) reject the flag.
+ * Require a supported rclone version; older distro packages may lack needed features.
  */
 export async function assertRcloneVersion(
   spawnRclone: RcloneVersionSpawn = (options) => Bun.spawn(options),
@@ -65,7 +64,7 @@ export async function assertRcloneVersion(
   if (!isAtLeast(actual, minimum)) {
     throw new Error(
       `rclone ${actual.join(".")} is too old; need >= ${MIN_RCLONE_VERSION} ` +
-        `(for bisync --create-empty-src-dirs). Upgrade via https://rclone.org/install/`,
+        "for asset operations. Upgrade via https://rclone.org/install/",
     )
   }
 }

@@ -19,16 +19,12 @@ describe("ignored folder names", () => {
     expect(isIgnoredDir(name)).toBe(true)
   })
 
-  test.each([
-    "modules",
-    "new",
-    "1920x1080",
-    "256",
-    "resources",
-    "ships_v2",
-  ])("does not ignore %s by default", (name) => {
-    expect(isIgnoredDir(name)).toBe(false)
-  })
+  test.each(["modules", "new", "1920x1080", "256", "resources", "ships_v2"])(
+    "does not ignore %s by default",
+    (name) => {
+      expect(isIgnoredDir(name)).toBe(false)
+    },
+  )
 
   test("uses caller-provided ignored folder names", () => {
     expect(isIgnoredDir("archive", ["archive"])).toBe(true)

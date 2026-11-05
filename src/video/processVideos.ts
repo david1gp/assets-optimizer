@@ -2,10 +2,13 @@ import { dirExists } from "../shared/dirExists.js"
 import { ensureVideoPreviews } from "./ensureVideoPreviews.js"
 import type { ProcessVideosOptions } from "./ProcessVideosOptions.js"
 import { processLocalVideos } from "./processLocalVideos.js"
+import { videoStaleOutputsRemove } from "./videoStaleOutputsRemove.js"
 
 export async function processVideos(options: ProcessVideosOptions): Promise<void> {
   const { cwd, logger, result, videoOptimizedDir, videoPreviewQuality, videoPreviewHashLength, videoOriginalsDir } =
     options
+
+  await videoStaleOutputsRemove(videoOriginalsDir, videoOptimizedDir, logger)
 
   if (await dirExists(videoOriginalsDir)) {
     await processLocalVideos(videoOriginalsDir, videoOptimizedDir, cwd, result, logger)

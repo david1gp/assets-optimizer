@@ -7,6 +7,7 @@ import { printSummary } from "../shared/printSummary.js"
 import { ensureVideoPreviews } from "./ensureVideoPreviews.js"
 import type { OptimizeVideosOptions } from "./OptimizeVideosOptions.js"
 import { processLocalVideos } from "./processLocalVideos.js"
+import { videoStaleOutputsRemove } from "./videoStaleOutputsRemove.js"
 
 export async function optimizeVideos(options: OptimizeVideosOptions = {}): Promise<AssetsOptimizeResult> {
   const cwd = path.resolve(options.cwd ?? process.cwd())
@@ -30,6 +31,8 @@ export async function optimizeVideos(options: OptimizeVideosOptions = {}): Promi
     processedVideoPreviews: [],
     skippedExistingVideoPreviews: [],
   }
+
+  await videoStaleOutputsRemove(videoOriginalsDir, videoOptimizedDir, logger)
 
   if (await dirExists(videoOriginalsDir)) {
     await processLocalVideos(videoOriginalsDir, videoOptimizedDir, cwd, result, logger)

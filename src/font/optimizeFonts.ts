@@ -7,6 +7,7 @@ import { dirExists } from "../shared/dirExists.js"
 import { createLogger } from "../shared/logger.js"
 import { printSummary } from "../shared/printSummary.js"
 import { walkFiles } from "../shared/walkFiles.js"
+import { fontStaleOutputsRemove } from "./fontStaleOutputsRemove.js"
 import type { OptimizeFontsOptions } from "./OptimizeFontsOptions.js"
 import { parseFontFilename } from "./parseFontFilename.js"
 import { supportedFontOutputExtensions, supportedFontSourceExtensions } from "./supportedFontExtensions.js"
@@ -64,6 +65,8 @@ export async function optimizeFonts(options: OptimizeFontsOptions = {}): Promise
     processedVideoPreviews: [],
     skippedExistingVideoPreviews: [],
   }
+
+  await fontStaleOutputsRemove(fontOriginalsDir, fontOptimizedDir, logger)
 
   if (await dirExists(fontOriginalsDir)) {
     for (const sourceFile of await walkFiles(fontOriginalsDir)) {

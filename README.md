@@ -34,8 +34,8 @@ Quick link
 
 `processAssets()` orchestrates the full workflow:
 
-1. Syncs originals from remote source to local `images` and `videos` folders via `rclone bisync`
-2. Runs `assetsOptimize()` to process images and videos locally
+1. Syncs originals from remote source to local `images` and `videos` folders using the catalog sync protocol
+2. Pulls existing optimized outputs from R2, then runs `assetsOptimize()` locally
 3. Uploads optimized assets to s3-compatible remote destination with caching headers
 
 `assetsOptimize()` performs the core asset processing:
@@ -132,7 +132,7 @@ Video behavior:
 - existing processed videos are skipped and preserved as manual transformations
 - existing previews are skipped; stale previews from a previous hash are removed when regenerated
 - video filenames and relative paths are kept as-is (optimize them by hand)
-- stale processed videos are not deleted
+- processed videos and generated previews without a corresponding original are deleted; cleanup is skipped if the originals directory is missing
 
 ## Hash Length
 
@@ -228,7 +228,32 @@ assets-optimizer optimize --no-process-images --no-process-videos --no-process-f
 
 String arrays accept repeated flags, for example `--ignored-dir-names cache --ignored-dir-names tmp`. AI label settings use flattened flags such as `--ai-label-mode adaptive` and `--ai-label-placement bottom-right`. Run `assets-optimizer optimize --help` for the full list.
 
-The CLI writes one JSON object to stdout. Successful runs use `{ "success": true, "data": ... }`; failures use `{ "success": false, "error": ... }` and exit with status 1. Requested logs are captured in an optional `diagnostics` field instead of being written as separate lines. Stderr stays empty.
+The `optimize` command writes one JSON object to stdout. Successful runs use `{ "success": true, "data": ... }`; failures use `{ "success": false, "error": ... }` and exit with status 1. Requested logs are captured in an optional `diagnostics` field instead of being written as separate lines. Stderr stays empty.
+
+## Catalog sync for originals
+
+The remote is the source of truth. Each originals tree has a remote `.assets-sync/` containing `catalog.json` (with a global version counter), `changelog.jsonl`, and `trash/<date>/<transfer-id>/`; separate transfer IDs preserve repeated same-day backups, and trash is purged after 30 days. Each local tree stores its base catalog and hash cache in its own `.assets-sync/`. Add these patterns to the consumer project's `.gitignore`:
+
+```gitignore
+.assets-sync/
+*.remote-conflict.*
+```
+
+Sync compares local and remote against the local base: a local-only change uploads, a remote-only change downloads, and a deletion propagates when the other side is unchanged. Identical changes need no transfer; different changes on both sides conflict rather than overwrite. On a fresh machine without a base, remote files download; differing existing local and remote files conflict.
+
+On a fresh machine, a local-only original is deleted only when a remote tombstone matches its SHA-256. A missing remote file without a matching tombstone is restored from the local original instead.
+
+For a conflict, compare the local original with its `*.remote-conflict.*` copy. Keep the local original to upload it, or replace it with the remote copy to keep the remote version. For a remote deletion, delete the local original to accept it. Remove conflict copies and sync again.
+
+When migrating from bisync, the first run against an existing remote creates a catalog. Old rclone bisync state in `~/.cache/rclone/bisync` can be deleted. The `resync` option is a deprecated no-op.
+
+```bash
+assets-optimizer status --local images --remote myremote:project/images
+assets-optimizer sync --local images --remote myremote:project/images --dry-run
+assets-optimizer sync --local images --remote myremote:project/images --cwd /path/to/project
+```
+
+`status` and `sync --dry-run` show the plan without applying it. By default, both commands print a human-readable plan and summary to stdout; errors are printed to stderr and exit nonzero. Add `--json` to either command for a JSON envelope on stdout, including `data.text` on success; errors also use the JSON envelope and exit nonzero. Status can show conflicts in its plan; sync exits nonzero on conflicts or errors.
 
 ## Local folders
 
@@ -265,7 +290,7 @@ This package is built for a workflow with two local directories:
 ## Requirements
 
 - `bun`
-- `rclone` >= 1.66 (for `bisync --create-empty-src-dirs`; distro packages like Debian 1.60.x are too old — install from https://rclone.org/install/)
+- `rclone` >= 1.66 (install from https://rclone.org/install/)
 - `ffmpeg`
 - an existing `rclone` remote
 - write access to the target bucket/path
@@ -275,7 +300,7 @@ This package assumes the remote bucket/path already exists or can be created by 
 
 ## Cleanup Behavior
 
-The package does not use a manifest.
+Optimized output cleanup does not use a manifest.
 
 Instead it derives the expected output set from the current originals and current transform folders, then reconciles that against:
 

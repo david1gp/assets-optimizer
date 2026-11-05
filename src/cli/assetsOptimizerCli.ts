@@ -35,7 +35,13 @@ try {
 
 const commandOutput = stdoutChunks.join("")
 const parsedOutput = parseEnvelope(commandOutput)
-if (parsedOutput !== undefined) {
+const isTextSync =
+  (process.argv[2] === "status" || process.argv[2] === "sync") && !process.argv.slice(3).includes("--json")
+if (isTextSync) {
+  if (commandOutput) process.stdout.write(commandOutput)
+  const errors = stderrChunks.join("") || (runError === undefined ? "" : getErrorMessage(runError))
+  if (errors) process.stderr.write(errors.endsWith("\n") ? errors : `${errors}\n`)
+} else if (parsedOutput !== undefined) {
   process.stdout.write(commandOutput.endsWith("\n") ? commandOutput : `${commandOutput}\n`)
 } else if (cliProcess.exitCode === 0) {
   process.stdout.write(

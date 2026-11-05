@@ -1,11 +1,15 @@
 import { buildApplication, buildRouteMap } from "@stricli/core"
 import { packageVersion } from "../packageVersion.js"
 import { optimizeCommand } from "./optimizeCommand.js"
+import { statusCommand } from "./statusCommand.js"
+import { syncCommand } from "./syncCommand.js"
 import { versionCommand } from "./versionCommand.js"
 
 const assetsOptimizerRoutes = buildRouteMap({
   routes: {
     optimize: optimizeCommand,
+    status: statusCommand,
+    sync: syncCommand,
     version: versionCommand,
   },
   docs: {

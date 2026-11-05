@@ -96,9 +96,9 @@ describe("optimizeImages with allowRootImageFiles", () => {
     })
 
     const listSource = await fs.readFile(imageListOutputPath, "utf-8")
-    expect(listSource).toContain("hero:")
-    expect(listSource).toContain('alt: "A hero image."')
-    expect(listSource).toContain("width: 12")
-    expect(listSource).toContain("height: 9")
+    expect(listSource).toMatch(/"?hero"?:/)
+    expect(listSource).toMatch(/"?alt"?: "A hero image\."/)
+    expect(listSource).toMatch(/"?width"?: 12/)
+    expect(listSource).toMatch(/"?height"?: 9/)
   })
 })

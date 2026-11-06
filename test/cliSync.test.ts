@@ -95,6 +95,49 @@ test("status plans and sync uploads originals to a local remote", async () => {
   }
 })
 
+test("sync exits non-zero with pending conflicts but still syncs other paths", async () => {
+  const root = await mkdtemp("/tmp/opencode/cli-sync-conflict-")
+  try {
+    await mkdir(join(root, "a"))
+    await mkdir(join(root, "b"))
+    await mkdir(join(root, "remote"))
+    await writeFile(join(root, "remote", "conflict.txt"), "base")
+    const a = ["sync", "--local", "a", "--remote", "remote", "--cwd", root]
+    const b = ["sync", "--local", "b", "--remote", "remote", "--cwd", root]
+    expect((await run(...a)).code).toBe(0)
+    expect((await run(...b)).code).toBe(0)
+    await writeFile(join(root, "a", "conflict.txt"), "A edit")
+    await writeFile(join(root, "b", "conflict.txt"), "B edit")
+    await writeFile(join(root, "b", "other.txt"), "synced despite the conflict")
+    expect((await run(...a)).code).toBe(0)
+    const conflicted = await run(...b)
+    expect(conflicted.code).toBe(1)
+    expect(conflicted.stdout).toBe("")
+    expect(conflicted.stderr).toContain("unresolved conflict(s); other paths were synced")
+    expect(conflicted.stderr).toContain("⚠ conflict conflict.txt")
+    expect(await readFile(join(root, "remote", "other.txt"), "utf8")).toBe("synced despite the conflict")
+    expect(await readFile(join(root, "b", "conflict.remote-conflict.txt"), "utf8")).toBe("A edit")
+    const status = await run("status", "--local", "b", "--remote", "remote", "--cwd", root)
+    expect(status.code).toBe(0)
+    expect(status.stdout).toContain("⚠ conflict conflict.txt")
+    const json = await run(...b, "--json")
+    expect(json.code).toBe(1)
+    expect(json.stderr).toBe("")
+    const envelope = JSON.parse(json.stdout)
+    expect(envelope.success).toBe(false)
+    expect(envelope.error.message).toContain("other paths were synced")
+    expect(envelope.data.summary.conflicts).toBe(1)
+    const preferred = await run(...b, "--prefer", "remote")
+    expect(preferred.code).toBe(0)
+    expect(await readFile(join(root, "b", "conflict.txt"), "utf8")).toBe("A edit")
+    const today = new Date().toISOString().slice(0, 10)
+    expect(await readFile(join(root, "b", ".assets-sync/trash", today, "conflict.txt"), "utf8")).toBe("B edit")
+    expect(await Bun.file(join(root, "b", "conflict.remote-conflict.txt")).exists()).toBe(false)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
 test("sync errors are plain text by default and JSON with --json", async () => {
   const args = ["--local", "local", "--remote", "remote", "--cwd", "/dev/null"]
   const plain = await run("sync", ...args)

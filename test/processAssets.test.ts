@@ -5,6 +5,12 @@ import sharp from "sharp"
 import { optimizeImages } from "../src/image/optimizeImages.js"
 import { processAssets } from "../src/process/processAssets.js"
 
+async function solidPng(background: string): Promise<Buffer> {
+  return sharp({ create: { width: 4, height: 4, channels: 3, background } })
+    .png()
+    .toBuffer()
+}
+
 test("syncs originals and pulls existing outputs before optimizing on a fresh machine", async () => {
   const root = await mkdtemp("/tmp/opencode/process-assets-")
   try {
@@ -42,7 +48,7 @@ test("syncs originals and pulls existing outputs before optimizing on a fresh ma
     expect(await readFile(path.join(second, "public/images", outputs[0]!))).toEqual(originalOutput)
     expect(await readdir(dest)).toEqual(outputs)
 
-    // Sync deliberately refuses unresolved conflicts, so exercise the optimizer directly.
+    // Conflict copies are excluded from optimization, so exercise the optimizer directly.
     await writeFile(path.join(second, "images/hero.remote-conflict.png"), image)
     await mkdir(path.join(second, "images/.assets-sync/256"), { recursive: true })
     await writeFile(path.join(second, "images/.assets-sync/256/hidden.png"), image)
@@ -67,3 +73,42 @@ test("syncs originals and pulls existing outputs before optimizing on a fresh ma
     await rm(root, { recursive: true, force: true })
   }
 }, 30000)
+
+test("processAssets proceeds to optimization when only sync conflicts are pending", async () => {
+  const root = await mkdtemp("/tmp/opencode/process-assets-conflict-")
+  try {
+    const remote = path.join(root, "remote")
+    const dest = path.join(root, "dest")
+    const first = path.join(root, "first")
+    await mkdir(remote, { recursive: true })
+    await mkdir(first)
+    await writeFile(path.join(remote, "hero.png"), await solidPng("red"))
+    const options = {
+      sourceImagesRemotePath: remote,
+      sourceVideosRemotePath: "unused",
+      sourceFontsRemotePath: "unused",
+      destImagesRemotePath: dest,
+      destVideosRemotePath: "unused",
+      destFontsRemotePath: "unused",
+      processVideos: false,
+      processFonts: false,
+      allowRootImageFiles: true,
+      generateImageList: false,
+      logLevel: 0 as const,
+    }
+    await processAssets({ ...options, cwd: first })
+    const before = await readdir(dest)
+    expect(before).toHaveLength(1)
+    // Conflicting edits on both sides: sync quarantines hero.png instead of throwing,
+    // and the kept local contents are still optimized and uploaded.
+    await writeFile(path.join(first, "images/hero.png"), await solidPng("blue"))
+    await writeFile(path.join(remote, "hero.png"), await solidPng("green"))
+    await processAssets({ ...options, cwd: first })
+    expect(await Bun.file(path.join(first, "images/hero.remote-conflict.png")).exists()).toBe(true)
+    const after = await readdir(dest)
+    expect(after).toHaveLength(1)
+    expect(after).not.toEqual(before)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+}, 60000)

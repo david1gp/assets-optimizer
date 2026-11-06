@@ -67,6 +67,17 @@ test("catalog, changelog, transfer, compare, trash and purge work with local rcl
   expect(await readFile(join(local, "conflict copy"), "utf8")).toBe("new content")
 })
 
+test("an empty remote catalog file reads as missing, like B2 cat of a nonexistent object", async () => {
+  const root = await mkdtemp("/tmp/opencode/sync-test-")
+  roots.push(root)
+  const remote = join(root, "remote")
+  // B2/S3 `rclone cat` of a missing object exits 0 with zero bytes instead of
+  // failing; a zero-byte catalog object is the local equivalent of that result.
+  await mkdir(join(remote, ".assets-sync"), { recursive: true })
+  await writeFile(join(remote, ".assets-sync/catalog.json"), "")
+  expect(await syncRemoteCatalogRead(remote)).toBeNull()
+})
+
 test("repeated same-day uploads and deletes preserve every previous original in separate trash slots", async () => {
   const root = await mkdtemp("/tmp/opencode/sync-trash-")
   roots.push(root)

@@ -239,11 +239,24 @@ The remote is the source of truth. Each originals tree has a remote `.assets-syn
 *.remote-conflict.*
 ```
 
-Sync compares local and remote against the local base: a local-only change uploads, a remote-only change downloads, and a deletion propagates when the other side is unchanged. Identical changes need no transfer; different changes on both sides conflict rather than overwrite. On a fresh machine without a base, remote files download; differing existing local and remote files conflict.
+Sync compares local and remote against the local base: a local-only change uploads, a remote-only change downloads, and a deletion propagates when the other side is unchanged. Identical changes need no transfer; different edits on both sides conflict rather than overwrite. On a fresh machine without a base, remote files download; differing existing local and remote files conflict.
 
 On a fresh machine, a local-only original is deleted only when a remote tombstone matches its SHA-256. A missing remote file without a matching tombstone is restored from the local original instead.
 
-For a conflict, compare the local original with its `*.remote-conflict.*` copy. Keep the local original to upload it, or replace it with the remote copy to keep the remote version. For a remote deletion, delete the local original to accept it. Remove conflict copies and sync again.
+An edit wins over a deletion: when one side edited a tracked file and the other side deleted it, the edit is applied (uploaded or downloaded) in a single run instead of conflicting.
+
+A conflict quarantines only its own path. Every other path still syncs and commits in the same run; the conflicted local file is left untouched and the remote contents are downloaded as a sibling `*.remote-conflict.*` copy. `syncOriginals()` returns normally with `summary.conflicts > 0` instead of throwing (note: this is a behaviour change for library callers that relied on the throw). The next run re-reports the path without auto-uploading while the copy exists. To resolve, inspect the conflict and pick a side with `resolve`, then sync again to apply it:
+
+```bash
+assets-optimizer resolve --local images
+assets-optimizer resolve --local images --keep local conflict/photo.jpg
+assets-optimizer resolve --local images --keep remote
+assets-optimizer resolve --local images --keep both conflict/photo.jpg
+```
+
+Without `--keep`, `resolve` only lists outstanding conflicts and changes nothing, showing both sides (size, date, author, image dimensions, and whether the pixels match). `--keep local` deletes the copy so the next sync uploads the local file; `--keep remote` replaces the local file with the copy (restoring it when missing) so the next sync is a no-op for that path; `--keep both` renames the copy to a `*.remote-copy.*` sibling, which becomes a normal original that syncs and gets optimized. Pass specific original paths to resolve only those; unknown or non-conflicted paths fail without affecting the others. As a fallback, the same steps can be done manually: keep the local original and delete the copy to upload it, or replace the local file with the copy and delete the copy to keep the remote version. For a remote deletion, delete the local original to accept it.
+
+To resolve edit/edit conflicts without manual steps, pass `prefer: "local"` (upload local; the remote loser is preserved by the upload backup-dir trash) or `prefer: "remote"` (move the losing local file to `<localDir>/.assets-sync/trash/<YYYY-MM-DD>/<path>`, adding a numeric suffix on same-day repeats, then download remote). Outstanding `*.remote-conflict.*` copies from earlier runs resolve the same way. Warnings name each auto-resolved path.
 
 When migrating from bisync, the first run against an existing remote creates a catalog. Old rclone bisync state in `~/.cache/rclone/bisync` can be deleted. The `resync` option is a deprecated no-op.
 
@@ -251,9 +264,10 @@ When migrating from bisync, the first run against an existing remote creates a c
 assets-optimizer status --local images --remote myremote:project/images
 assets-optimizer sync --local images --remote myremote:project/images --dry-run
 assets-optimizer sync --local images --remote myremote:project/images --cwd /path/to/project
+assets-optimizer sync --local images --remote myremote:project/images --prefer remote
 ```
 
-`status` and `sync --dry-run` show the plan without applying it. By default, both commands print a human-readable plan and summary to stdout; errors are printed to stderr and exit nonzero. Add `--json` to either command for a JSON envelope on stdout, including `data.text` on success; errors also use the JSON envelope and exit nonzero. Status can show conflicts in its plan; sync exits nonzero on conflicts or errors.
+`status` and `sync --dry-run` show the plan without applying it. By default, both commands print a human-readable plan and summary to stdout; errors are printed to stderr and exit nonzero. Add `--json` to either command for a JSON envelope on stdout, including `data.text` on success; errors also use the JSON envelope and exit nonzero. Status can show conflicts in its plan; sync exits nonzero when unresolved conflicts remain after a completed partial sync, and its message makes clear the other paths were synced.
 
 ## Local folders
 

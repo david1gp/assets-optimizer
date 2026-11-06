@@ -36,7 +36,8 @@ try {
 const commandOutput = stdoutChunks.join("")
 const parsedOutput = parseEnvelope(commandOutput)
 const isTextSync =
-  (process.argv[2] === "status" || process.argv[2] === "sync") && !process.argv.slice(3).includes("--json")
+  (process.argv[2] === "status" || process.argv[2] === "sync" || process.argv[2] === "resolve") &&
+  !process.argv.slice(3).includes("--json")
 if (isTextSync) {
   if (commandOutput) process.stdout.write(commandOutput)
   const errors = stderrChunks.join("") || (runError === undefined ? "" : getErrorMessage(runError))

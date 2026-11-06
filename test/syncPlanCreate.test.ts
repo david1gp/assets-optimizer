@@ -46,13 +46,13 @@ const cases: Case[] = [
   { name: "both delete", base: catalog("a"), remote: catalog("a", 2, true), action: "none" },
   { name: "both add different content", base: catalog(), remote: catalog("a", 2), local: "b", action: "conflict" },
   { name: "both update differently", base: catalog("a"), remote: catalog("b", 2), local: "c", action: "conflict" },
-  { name: "local delete versus remote update", base: catalog("a"), remote: catalog("b", 2), action: "conflict" },
+  { name: "local delete versus remote update", base: catalog("a"), remote: catalog("b", 2), action: "download" },
   {
     name: "remote delete versus local update",
     base: catalog("a"),
     remote: catalog("a", 2, true),
     local: "b",
-    action: "conflict",
+    action: "upload",
   },
   {
     name: "remote re-add versus local re-add",
@@ -146,7 +146,7 @@ const cases: Case[] = [
     base: catalog("a"),
     remote: catalog("a"),
     remoteListing: { [path]: { size: 1, modTime: "new" } },
-    action: "conflict",
+    action: "download",
     external: "update",
   },
   {
@@ -173,7 +173,7 @@ const cases: Case[] = [
     remote: catalog("a"),
     local: "b",
     remoteListing: {},
-    action: "conflict",
+    action: "upload",
     external: "delete",
   },
   {
@@ -336,6 +336,27 @@ describe("syncPlanCreate", () => {
         externalEqualLocal: new Set(),
       })[0]?.action,
     ).toBe("conflict")
+  })
+
+  test("edit-wins-over-delete reasons name the override", () => {
+    const download = syncPlanCreate({
+      remote: catalog("b", 2),
+      base: catalog("a"),
+      localFiles: {},
+      remoteListing: listing(catalog("b", 2)),
+      externalEqualLocal: new Set(),
+    })[0]
+    expect(download?.action).toBe("download")
+    expect(download?.reason).toContain("overrode the local deletion")
+    const upload = syncPlanCreate({
+      remote: catalog("a", 2, true),
+      base: catalog("a"),
+      localFiles: local("b"),
+      remoteListing: {},
+      externalEqualLocal: new Set(),
+    })[0]
+    expect(upload?.action).toBe("upload")
+    expect(upload?.reason).toContain("overrode the remote deletion")
   })
 
   test("returns paths in deterministic order and handles completely empty inputs", () => {

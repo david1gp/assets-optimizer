@@ -73,7 +73,13 @@ export function syncPlanCreate(input: SyncPlanInput): SyncPlan {
     if (!localChanged && !remoteChanged) return entry("none", "Neither side changed")
     // Includes both deleted, same hash, and externally changed but checked-equal content.
     if (equal) return entry("none", "Both sides have the same final contents")
-    if (localChanged && remoteChanged) return entry("conflict", "Both sides changed to different contents")
+    if (localChanged && remoteChanged) {
+      // An edit wins over a deletion of a tracked file, explicitly and in a single run.
+      // Additions without a tracked base file still conflict (there is no edit to prefer).
+      if (!local && listed && baseFile) return entry("download", "Remote edit overrode the local deletion")
+      if (local && !listed && baseFile) return entry("upload", "Local edit overrode the remote deletion")
+      return entry("conflict", "Both sides changed to different contents")
+    }
     if (remoteChanged) {
       return listed ? entry("download", "Only remote changed") : entry("delete-local", "Only remote deleted")
     }
